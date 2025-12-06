@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import '../models/product.dart';
-import '../services/mock_data.dart';
+import '../services/cart_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/search_bar_widget.dart';
 import '../models/cart_item.dart';
@@ -37,11 +37,48 @@ class _SearchScreenState extends State<SearchScreen> {
 
   }
 
-  void _addToCart(Product product) {
-    final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    cartProvider.addToCart(CartItem(product: product, quantity: 1));
-    
-   
+  void _addToCart(Product product) async {
+    try {
+      // Show loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đang thêm vào giỏ hàng...'),
+          duration: Duration(seconds: 1),
+          backgroundColor: AppTheme.primaryColor,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      // Call API to add to cart
+      final cartService = CartService();
+      final result = await cartService.addToCart(product.productId, 1);
+
+      if (result != null) {
+        // Add to local cart provider for UI updates
+        final cartProvider = Provider.of<CartProvider>(context, listen: false);
+        cartProvider.addToCart(CartItem(product: product, quantity: 1));
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đã thêm ${product.productName} vào giỏ hàng'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: AppTheme.successColor,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không thể thêm vào giỏ hàng: ${e.toString()}'),
+          duration: const Duration(seconds: 3),
+          backgroundColor: AppTheme.errorColor,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override
