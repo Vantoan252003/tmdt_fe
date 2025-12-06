@@ -1,6 +1,6 @@
 class ApiEndpoints {
   // Base URL
-  static const String baseUrl = 'http://192.168.1.253:8080/api';
+  static const String baseUrl = 'http://192.168.0.112:8080/api';
   
   // Auth endpoints
   static const String login = '$baseUrl/auth/login';
@@ -11,10 +11,9 @@ class ApiEndpoints {
   // Product endpoints
   static const String products = '$baseUrl/products';
   static String productDetail(String id) => '$baseUrl/products/$id';
-  static const String searchProducts = '$baseUrl/products/search';
-  static const String featuredProducts = '$baseUrl/products/featured';
-  static const String newProducts = '$baseUrl/products/new';
   static String productsByCategory(String categoryId) => '$baseUrl/products/category/$categoryId';
+  static String productsByShop(String shopId) => '$baseUrl/products/shop/$shopId';
+  static String searchProducts = '$baseUrl/products/search';
   
   // Category endpoints
   static const String categories = '$baseUrl/categories';
@@ -37,7 +36,6 @@ class ApiEndpoints {
   static const String profile = '$baseUrl/user/profile';
   static const String updateProfile = '$baseUrl/user/profile/update';
   static const String changePassword = '$baseUrl/user/password/change';
-  static const String addresses = '$baseUrl/user/addresses';
   
   // Wishlist endpoints
   static const String wishlist = '$baseUrl/wishlist';
@@ -47,7 +45,16 @@ class ApiEndpoints {
   // Review endpoints
   static String productReviews(String productId) => '$baseUrl/products/$productId/reviews';
   static const String createReview = '$baseUrl/reviews/create';
-  
+
+  // Address endpoints
+  static const String addresses = '$baseUrl/addresses';
+  static String addressById(String id) => '$baseUrl/addresses/$id';
+  static String setDefaultAddress(String id) => '$baseUrl/addresses/$id/default';
+
+  // Location endpoints
+  static const String cities = '$baseUrl/locations/cities';
+  static String districtsByCity(String city) => '$baseUrl/locations/cities/$city/districts';
+
   // Payment endpoints
   static const String paymentMethods = '$baseUrl/payment/methods';
   static const String processPayment = '$baseUrl/payment/process';

@@ -4,6 +4,7 @@ import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/search_bar_widget.dart';
 import '../providers/cart_provider.dart';
+import '../providers/product_provider.dart';
 import 'package:provider/provider.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -15,8 +16,9 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  List<Product> searchResults = [];
-  bool isSearching = false;
+  String? _selectedCategoryId;
+  double? _minPrice;
+  double? _maxPrice;
 
   @override
   void dispose() {
@@ -24,15 +26,20 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  void _performSearch(String query) {
+  void _performSearch(String query) async {
     if (query.isEmpty) {
-      setState(() {
-        searchResults = [];
-        isSearching = false;
-      });
+      final productProvider = Provider.of<ProductProvider>(context, listen: false);
+      productProvider.clearSearchResults();
       return;
     }
 
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    await productProvider.searchProducts(
+      keyword: query,
+      categoryId: _selectedCategoryId,
+      minPrice: _minPrice,
+      maxPrice: _maxPrice,
+    );
   }
 
   void _addToCart(Product product) async {
@@ -116,13 +123,40 @@ class _SearchScreenState extends State<SearchScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Search bar
-              SearchBarWidget(
-                controller: _searchController,
-                onChanged: _performSearch,
+              // Search bar and filters
+              Row(
+                children: [
+                  Expanded(
+                    child: SearchBarWidget(
+                      controller: _searchController,
+                      onChanged: _performSearch,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    onPressed: _showFilterDialog,
+                    icon: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.filter_list,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
-              
+
+              // Active filters
+              if (_selectedCategoryId != null || _minPrice != null || _maxPrice != null)
+                _buildActiveFilters(),
+
+              const SizedBox(height: 16),
+
               // Results
               Expanded(
                 child: _buildResults(),
@@ -135,26 +169,59 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildResults() {
-    if (!isSearching) {
-      return _buildSuggestions();
-    }
+    return Consumer<ProductProvider>(
+      builder: (context, productProvider, child) {
+        if (productProvider.isSearching) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
 
-    if (searchResults.isEmpty) {
-      return _buildNoResults();
-    }
+        if (productProvider.error != null) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: AppTheme.errorColor,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Lỗi: ${productProvider.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppTheme.errorColor),
+                ),
+              ],
+            ),
+          );
+        }
 
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.7,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: searchResults.length,
-      itemBuilder: (context, index) {
-        return ProductCard(
-          product: searchResults[index],
-          onAddToCart: () => _addToCart(searchResults[index]),
+        final searchResults = productProvider.searchResults;
+
+        if (_searchController.text.isEmpty) {
+          return _buildSuggestions();
+        }
+
+        if (searchResults.isEmpty) {
+          return _buildNoResults();
+        }
+
+        return GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.7,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+          ),
+          itemCount: searchResults.length,
+          itemBuilder: (context, index) {
+            return ProductCard(
+              product: searchResults[index],
+              onAddToCart: () => _addToCart(searchResults[index]),
+            );
+          },
         );
       },
     );
@@ -265,6 +332,133 @@ class _SearchScreenState extends State<SearchScreen> {
               fontSize: 14,
               color: AppTheme.textSecondary,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveFilters() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.filter_list,
+            size: 16,
+            color: AppTheme.primaryColor,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _getActiveFiltersText(),
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: _clearFilters,
+            icon: const Icon(
+              Icons.clear,
+              size: 16,
+              color: AppTheme.primaryColor,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getActiveFiltersText() {
+    final filters = <String>[];
+    if (_selectedCategoryId != null) filters.add('Danh mục');
+    if (_minPrice != null || _maxPrice != null) {
+      final priceText = '${_minPrice ?? 0} - ${_maxPrice ?? '∞'}';
+      filters.add('Giá: $priceText');
+    }
+    return filters.join(', ');
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedCategoryId = null;
+      _minPrice = null;
+      _maxPrice = null;
+    });
+    if (_searchController.text.isNotEmpty) {
+      _performSearch(_searchController.text);
+    }
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bộ lọc tìm kiếm'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Category filter (simplified - you can expand this)
+            const Text('Danh mục: Chưa triển khai'),
+
+            const SizedBox(height: 16),
+
+            // Price range
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    initialValue: _minPrice?.toString(),
+                    decoration: const InputDecoration(
+                      labelText: 'Giá từ',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _minPrice = value.isEmpty ? null : double.tryParse(value);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    initialValue: _maxPrice?.toString(),
+                    decoration: const InputDecoration(
+                      labelText: 'Giá đến',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _maxPrice = value.isEmpty ? null : double.tryParse(value);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (_searchController.text.isNotEmpty) {
+                _performSearch(_searchController.text);
+              }
+            },
+            child: const Text('Áp dụng'),
           ),
         ],
       ),

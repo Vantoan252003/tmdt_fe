@@ -4,6 +4,7 @@ import '../models/category.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../providers/cart_provider.dart';
+import '../providers/product_provider.dart';
 import 'package:provider/provider.dart';
 
 class CategoryProductsScreen extends StatefulWidget {
@@ -19,36 +20,40 @@ class CategoryProductsScreen extends StatefulWidget {
 }
 
 class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
-  List<Product> products = [];
   String sortBy = 'default';
+  bool includeSubcategories = false;
 
   @override
   void initState() {
     super.initState();
-    
+    _loadCategoryProducts();
   }
 
+  Future<void> _loadCategoryProducts() async {
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    await productProvider.loadProductsByCategory(
+      widget.category.categoryId,
+      includeSubcategories: includeSubcategories,
+    );
+  }
 
-
-  void _sortProducts() {
-    setState(() {
-      switch (sortBy) {
-        case 'price_asc':
-          products.sort((a, b) => a.price.compareTo(b.price));
-          break;
-        case 'price_desc':
-          products.sort((a, b) => b.price.compareTo(a.price));
-          break;
-        case 'rating':
-          products.sort((a, b) => b.rating.compareTo(a.rating));
-          break;
-        case 'name':
-          products.sort((a, b) => a.productName.compareTo(b.productName));
-          break;
-        default:
-          break;
-      }
-    });
+  void _sortProducts(List<Product> products) {
+    switch (sortBy) {
+      case 'price_asc':
+        products.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'price_desc':
+        products.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case 'rating':
+        products.sort((a, b) => b.rating.compareTo(a.rating));
+        break;
+      case 'name':
+        products.sort((a, b) => a.productName.compareTo(b.productName));
+        break;
+      default:
+        break;
+    }
   }
 
   void _addToCart(Product product) async {
@@ -167,41 +172,82 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
             const SizedBox(width: 16),
           ],
         ),
-        body: products.isEmpty
-            ? _buildEmptyState()
-            : Padding(
-                padding: const EdgeInsets.all(16),
+        body: Consumer<ProductProvider>(
+          builder: (context, productProvider, child) {
+            if (productProvider.isLoadingCategory) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            if (productProvider.error != null) {
+              return Center(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      '${products.length} sản phẩm',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppTheme.textSecondary,
-                      ),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: AppTheme.errorColor,
                     ),
                     const SizedBox(height: 16),
-                    Expanded(
-                      child: GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.7,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                        itemCount: products.length,
-                        itemBuilder: (context, index) {
-                          return ProductCard(
-                            product: products[index],
-                            onAddToCart: () => _addToCart(products[index]),
-                          );
-                        },
-                      ),
+                    Text(
+                      'Lỗi: ${productProvider.error}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppTheme.errorColor),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadCategoryProducts,
+                      child: const Text('Thử lại'),
                     ),
                   ],
                 ),
+              );
+            }
+
+            final products = List<Product>.from(productProvider.categoryProducts);
+            _sortProducts(products);
+
+            if (products.isEmpty) {
+              return _buildEmptyState();
+            }
+
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${products.length} sản phẩm',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.7,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        return ProductCard(
+                          product: products[index],
+                          onAddToCart: () => _addToCart(products[index]),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -317,7 +363,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
       onTap: () {
         setState(() {
           sortBy = value;
-          _sortProducts();
         });
         Navigator.pop(context);
       },

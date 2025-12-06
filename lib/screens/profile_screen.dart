@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:student_ecommerce/screens/address_screen.dart';
 import '../utils/app_theme.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
@@ -117,7 +118,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _MenuItem(
                             icon: Icons.location_on_outlined,
                             title: 'Địa chỉ giao hàng',
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const AddressScreen(),
+                                ),
+                              );
+                            },
                           ),
                           _MenuItem(
                             icon: Icons.payment_outlined,
