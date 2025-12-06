@@ -1,0 +1,336 @@
+import 'package:flutter/material.dart';
+import '../utils/app_theme.dart';
+import '../models/category.dart';
+import '../models/product.dart';
+import '../services/mock_data.dart';
+import '../widgets/product_card.dart';
+import '../models/cart_item.dart';
+import '../providers/cart_provider.dart';
+import 'package:provider/provider.dart';
+
+class CategoryProductsScreen extends StatefulWidget {
+  final Category category;
+
+  const CategoryProductsScreen({
+    super.key,
+    required this.category,
+  });
+
+  @override
+  State<CategoryProductsScreen> createState() => _CategoryProductsScreenState();
+}
+
+class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
+  List<Product> products = [];
+  String sortBy = 'default';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  void _loadProducts() {
+    setState(() {
+      products = MockData.getProductsByCategory(widget.category.categoryName);
+      _sortProducts();
+    });
+  }
+
+  void _sortProducts() {
+    setState(() {
+      switch (sortBy) {
+        case 'price_asc':
+          products.sort((a, b) => a.price.compareTo(b.price));
+          break;
+        case 'price_desc':
+          products.sort((a, b) => b.price.compareTo(a.price));
+          break;
+        case 'rating':
+          products.sort((a, b) => b.rating.compareTo(a.rating));
+          break;
+        case 'name':
+          products.sort((a, b) => a.name.compareTo(b.name));
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  void _addToCart(Product product) {
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    cartProvider.addToCart(CartItem(product: product, quantity: 1));
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đã thêm ${product.name} vào giỏ hàng'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: AppTheme.successColor,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: AppTheme.backgroundGradient,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ),
+          title: Row(
+            children: [
+              Image.network(
+                widget.category.imageUrl,
+                width: 24,
+                height: 24,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.category, size: 24);
+                },
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  widget.category.categoryName,
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              onPressed: _showSortOptions,
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.sort,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+        ),
+        body: products.isEmpty
+            ? _buildEmptyState()
+            : Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${products.length} sản phẩm',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.7,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemCount: products.length,
+                        itemBuilder: (context, index) {
+                          return ProductCard(
+                            product: products[index],
+                            onAddToCart: () => _addToCart(products[index]),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryColor.withOpacity(0.1),
+                  AppTheme.secondaryColor.withOpacity(0.1),
+                ],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Image.network(
+              widget.category.imageUrl,
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.category, size: 80);
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Chưa có sản phẩm',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Danh mục này hiện chưa có sản phẩm nào',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSortOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 16),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Text(
+                      'Sắp xếp theo',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildSortOption('Mặc định', 'default'),
+              _buildSortOption('Giá thấp đến cao', 'price_asc'),
+              _buildSortOption('Giá cao đến thấp', 'price_desc'),
+              _buildSortOption('Đánh giá cao nhất', 'rating'),
+              _buildSortOption('Tên A-Z', 'name'),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSortOption(String title, String value) {
+    final isSelected = sortBy == value;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          sortBy = value;
+          _sortProducts();
+        });
+        Navigator.pop(context);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        color: isSelected
+            ? AppTheme.primaryColor.withOpacity(0.1)
+            : Colors.transparent,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isSelected
+                      ? AppTheme.primaryColor
+                      : AppTheme.textPrimary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check,
+                color: AppTheme.primaryColor,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
