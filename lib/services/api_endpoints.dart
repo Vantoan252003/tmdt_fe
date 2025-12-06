@@ -23,8 +23,8 @@ class ApiEndpoints {
   // Cart endpoints
   static const String cart = '$baseUrl/cart';
   static String addToCart = '$baseUrl/cart/add';
-  static String updateCartItem(String itemId) => '$baseUrl/cart/update/$itemId';
-  static String removeFromCart(String itemId) => '$baseUrl/cart/remove/$itemId';
+  static String updateCartItem(String cartItemId) => '$baseUrl/cart/items/$cartItemId';
+  static String removeFromCart(String cartItemId) => '$baseUrl/cart/items/$cartItemId';
   static const String clearCart = '$baseUrl/cart/clear';
   
   // Order endpoints

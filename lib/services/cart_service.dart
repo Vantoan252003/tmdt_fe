@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 import 'api_endpoints.dart';
+import '../models/cart_item_response.dart';
+import '../models/api_response.dart';
 
 class AddToCartRequest {
   final String productId;
@@ -20,64 +22,6 @@ class AddToCartRequest {
       'variantId': variantId,
       'quantity': quantity,
     };
-  }
-}
-
-class CartItemResponse {
-  final String cartItemId;
-  final String productId;
-  final String productName;
-  final String? variantId;
-  final String? variantName;
-  final int quantity;
-  final double price;
-  final double totalPrice;
-  final String? imageUrl;
-
-  CartItemResponse({
-    required this.cartItemId,
-    required this.productId,
-    required this.productName,
-    this.variantId,
-    this.variantName,
-    required this.quantity,
-    required this.price,
-    required this.totalPrice,
-    this.imageUrl,
-  });
-
-  factory CartItemResponse.fromJson(Map<String, dynamic> json) {
-    return CartItemResponse(
-      cartItemId: json['cartItemId'] ?? '',
-      productId: json['productId'] ?? '',
-      productName: json['productName'] ?? '',
-      variantId: json['variantId'],
-      variantName: json['variantName'],
-      quantity: json['quantity'] ?? 0,
-      price: (json['price'] ?? 0).toDouble(),
-      totalPrice: (json['totalPrice'] ?? 0).toDouble(),
-      imageUrl: json['imageUrl'],
-    );
-  }
-}
-
-class ApiResponse<T> {
-  final bool success;
-  final String message;
-  final T? data;
-
-  ApiResponse({
-    required this.success,
-    required this.message,
-    this.data,
-  });
-
-  factory ApiResponse.fromJson(Map<String, dynamic> json, T Function(Map<String, dynamic>) fromJson) {
-    return ApiResponse<T>(
-      success: json['success'] ?? false,
-      message: json['message'] ?? '',
-      data: json['data'] != null ? fromJson(json['data']) : null,
-    );
   }
 }
 
@@ -102,30 +46,25 @@ class CartService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: json.encode(request.toJson()),
+        body: jsonEncode(request.toJson()),
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
-        final apiResponse = ApiResponse.fromJson(
-          data,
-          (json) => CartItemResponse.fromJson(json),
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonResponse = jsonDecode(response.body);
+        final apiResponse = ApiResponse<CartItemResponse>.fromJson(
+          jsonResponse,
+          (data) => CartItemResponse.fromJson(data),
         );
-
-        if (apiResponse.success && apiResponse.data != null) {
-          return apiResponse.data;
-        } else {
-          throw Exception(apiResponse.message);
-        }
+        return apiResponse.data;
       } else {
-        throw Exception('Failed to add to cart: ${response.statusCode}');
+        throw Exception('Failed to add item to cart: ${response.statusCode}');
       }
     } catch (e) {
-      rethrow;
+      throw Exception('Error adding to cart: $e');
     }
   }
 
-  // Get cart items
+  // Get cart items via API
   Future<List<CartItemResponse>> getCartItems() async {
     try {
       final token = await AuthService.getToken();
@@ -136,34 +75,32 @@ class CartService {
       final response = await http.get(
         Uri.parse(ApiEndpoints.cart),
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
-        final apiResponse = ApiResponse.fromJson(
-          data,
-          (json) => (json as List).map((item) => CartItemResponse.fromJson(item)).toList(),
-        );
-
-        if (apiResponse.success && apiResponse.data != null) {
-          return apiResponse.data!;
+        final jsonResponse = jsonDecode(response.body);
+        if (jsonResponse['success'] == true) {
+          final data = jsonResponse['data'];
+          if (data is List) {
+            return data.map((item) => CartItemResponse.fromJson(item)).toList();
+          } else {
+            return [];
+          }
         } else {
-          return [];
+          throw Exception('API returned success=false: ${jsonResponse['message']}');
         }
       } else {
         throw Exception('Failed to get cart items: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error getting cart items: $e');
-      return [];
+      throw Exception('Error getting cart items: $e');
     }
   }
 
-  // Update cart item
-  Future<CartItemResponse?> updateCartItem(String itemId, int quantity) async {
+  // Update cart item quantity via API
+  Future<CartItemResponse?> updateCartItem(String cartItemId, int quantity) async {
     try {
       final token = await AuthService.getToken();
       if (token == null) {
@@ -171,37 +108,29 @@ class CartService {
       }
 
       final response = await http.put(
-        Uri.parse(ApiEndpoints.updateCartItem(itemId)),
+        Uri.parse('${ApiEndpoints.updateCartItem(cartItemId)}?quantity=$quantity'),
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: json.encode({'quantity': quantity}),
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
-        final apiResponse = ApiResponse.fromJson(
-          data,
-          (json) => CartItemResponse.fromJson(json),
+        final jsonResponse = jsonDecode(response.body);
+        final apiResponse = ApiResponse<CartItemResponse>.fromJson(
+          jsonResponse,
+          (data) => CartItemResponse.fromJson(data),
         );
-
-        if (apiResponse.success && apiResponse.data != null) {
-          return apiResponse.data;
-        } else {
-          throw Exception(apiResponse.message);
-        }
+        return apiResponse.data;
       } else {
         throw Exception('Failed to update cart item: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error updating cart item: $e');
-      rethrow;
+      throw Exception('Error updating cart item: $e');
     }
   }
 
-  // Remove from cart
-  Future<bool> removeFromCart(String itemId) async {
+  // Remove item from cart via API
+  Future<void> removeFromCart(String cartItemId) async {
     try {
       final token = await AuthService.getToken();
       if (token == null) {
@@ -209,29 +138,22 @@ class CartService {
       }
 
       final response = await http.delete(
-        Uri.parse(ApiEndpoints.removeFromCart(itemId)),
+        Uri.parse(ApiEndpoints.removeFromCart(cartItemId)),
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
-        final apiResponse = ApiResponse.fromJson(data, (json) => json);
-
-        return apiResponse.success;
-      } else {
-        throw Exception('Failed to remove from cart: ${response.statusCode}');
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to remove item from cart: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error removing from cart: $e');
-      return false;
+      throw Exception('Error removing from cart: $e');
     }
   }
 
-  // Clear cart
-  Future<bool> clearCart() async {
+  // Clear cart via API
+  Future<void> clearCart() async {
     try {
       final token = await AuthService.getToken();
       if (token == null) {
@@ -241,22 +163,15 @@ class CartService {
       final response = await http.delete(
         Uri.parse(ApiEndpoints.clearCart),
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
-        final apiResponse = ApiResponse.fromJson(data, (json) => json);
-
-        return apiResponse.success;
-      } else {
+      if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to clear cart: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error clearing cart: $e');
-      return false;
+      throw Exception('Error clearing cart: $e');
     }
   }
 }

@@ -3,8 +3,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../utils/app_theme.dart';
 import '../models/product.dart';
 import '../widgets/gradient_button.dart';
-import '../services/cart_service.dart';
-import '../models/cart_item.dart';
 import '../providers/cart_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -36,25 +34,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       );
 
-      // Call API to add to cart
-      final cartService = CartService();
-      final result = await cartService.addToCart(widget.product.productId, quantity);
+      // Add to cart using CartProvider
+      final cartProvider = Provider.of<CartProvider>(context, listen: false);
+      await cartProvider.addToCart(widget.product.productId, quantity);
 
-      if (result != null) {
-        // Add to local cart provider for UI updates
-        final cartProvider = Provider.of<CartProvider>(context, listen: false);
-        cartProvider.addToCart(CartItem(product: widget.product, quantity: quantity));
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đã thêm ${widget.product.productName} vào giỏ hàng'),
-            duration: const Duration(seconds: 2),
-            backgroundColor: AppTheme.successColor,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã thêm ${widget.product.productName} vào giỏ hàng'),
+          duration: const Duration(seconds: 2),
+          backgroundColor: AppTheme.successColor,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(

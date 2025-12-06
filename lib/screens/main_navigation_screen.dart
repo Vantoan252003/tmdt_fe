@@ -23,6 +23,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Delay cart loading until after the first frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCartItems();
+    });
+  }
+
+  Future<void> _loadCartItems() async {
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    await cartProvider.loadCartItems();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_currentIndex],
