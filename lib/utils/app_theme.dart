@@ -53,4 +53,7 @@ class AppTheme {
   
   // Rating color
   static const Color ratingColor = Color(0xFFFBBF24);
+  
+  // Discount color
+  static const Color discountColor = Color(0xFFE53E3E);
 }

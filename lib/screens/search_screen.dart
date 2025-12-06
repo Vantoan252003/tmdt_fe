@@ -35,24 +35,13 @@ class _SearchScreenState extends State<SearchScreen> {
       return;
     }
 
-    setState(() {
-      isSearching = true;
-      searchResults = MockData.searchProducts(query);
-    });
   }
 
   void _addToCart(Product product) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     cartProvider.addToCart(CartItem(product: product, quantity: 1));
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đã thêm ${product.name} vào giỏ hàng'),
-        duration: const Duration(seconds: 2),
-        backgroundColor: AppTheme.successColor,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+   
   }
 
   @override

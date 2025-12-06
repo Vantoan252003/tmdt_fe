@@ -27,15 +27,10 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProducts();
+    
   }
 
-  void _loadProducts() {
-    setState(() {
-      products = MockData.getProductsByCategory(widget.category.categoryName);
-      _sortProducts();
-    });
-  }
+
 
   void _sortProducts() {
     setState(() {
@@ -50,7 +45,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
           products.sort((a, b) => b.rating.compareTo(a.rating));
           break;
         case 'name':
-          products.sort((a, b) => a.name.compareTo(b.name));
+          products.sort((a, b) => a.productName.compareTo(b.productName));
           break;
         default:
           break;
@@ -64,7 +59,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Đã thêm ${product.name} vào giỏ hàng'),
+        content: Text('Đã thêm ${product.productName} vào giỏ hàng'),
         duration: const Duration(seconds: 2),
         backgroundColor: AppTheme.successColor,
         behavior: SnackBarBehavior.floating,

@@ -181,7 +181,7 @@ class CartScreen extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  item.product.imageUrl,
+                  item.product.productName.substring(0, 1).toUpperCase(),
                   style: const TextStyle(fontSize: 36),
                 ),
               ),
@@ -194,7 +194,7 @@ class CartScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.product.name,
+                    item.product.productName,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -222,7 +222,7 @@ class CartScreen extends StatelessWidget {
                         onPressed: () {
                           if (item.quantity > 1) {
                             cartProvider.updateQuantity(
-                              item.product.id,
+                              item.product.productId,
                               item.quantity - 1,
                             );
                           }
@@ -243,9 +243,9 @@ class CartScreen extends StatelessWidget {
                       _buildQuantityButton(
                         icon: Icons.add,
                         onPressed: () {
-                          if (item.quantity < item.product.stock) {
+                          if (item.quantity < item.product.stockQuantity) {
                             cartProvider.updateQuantity(
-                              item.product.id,
+                              item.product.productId,
                               item.quantity + 1,
                             );
                           }
@@ -270,10 +270,10 @@ class CartScreen extends StatelessWidget {
             // Delete button
             IconButton(
               onPressed: () {
-                cartProvider.removeFromCart(item.product.id);
+                cartProvider.removeFromCart(item.product.productId);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Đã xóa ${item.product.name}'),
+                    content: Text('Đã xóa ${item.product.productName}'),
                     duration: const Duration(seconds: 2),
                     backgroundColor: AppTheme.errorColor,
                     behavior: SnackBarBehavior.floating,

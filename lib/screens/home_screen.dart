@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import '../models/product.dart';
 import '../models/category.dart';
-import '../services/mock_data.dart';
+import '../services/product_service.dart';
 import '../services/category_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_card.dart';
@@ -24,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Product> featuredProducts = [];
   List<Product> newProducts = [];
   List<Category> categories = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -32,20 +33,37 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadData() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       final categoryService = CategoryService();
-      final allCategories = await categoryService.getCategories();
+      final productService = ProductService();
+      
+      // Load categories and products in parallel
+      final results = await Future.wait([
+        categoryService.getCategories(),
+        productService.getFeaturedProducts(),
+        productService.getNewProducts(),
+      ]);
+      
+      final allCategories = results[0] as List<Category>;
       final topLevelCategories = allCategories.where((c) => c.parentCategoryId == null).toList();
       
       setState(() {
-        featuredProducts = MockData.getFeaturedProducts();
-        newProducts = MockData.getNewProducts();
         categories = topLevelCategories;
+        featuredProducts = results[1] as List<Product>;
+        newProducts = results[2] as List<Product>;
+        isLoading = false;
       });
     } catch (e) {
-      // Handle error, perhaps show snackbar or keep empty
+      print('Error loading data: $e');
       setState(() {
         categories = [];
+        featuredProducts = [];
+        newProducts = [];
+        isLoading = false;
       });
     }
   }
@@ -56,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Đã thêm ${product.name} vào giỏ hàng'),
+        content: Text('Đã thêm ${product.productName} vào giỏ hàng'),
         duration: const Duration(seconds: 2),
         backgroundColor: AppTheme.successColor,
         behavior: SnackBarBehavior.floating,
@@ -73,58 +91,69 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  _buildHeader(),
-                  const SizedBox(height: 20),
-                  
-                  // Search bar
-                  SearchBarWidget(
-                    readOnly: true,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SearchScreen(),
-                        ),
-                      );
-                    },
+          child: isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: AppTheme.primaryColor,
                   ),
-                  const SizedBox(height: 24),
-                  
-                  // Categories
-                  _buildSectionTitle('Danh mục', onViewAll: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CategoriesScreen(),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadData,
+                  color: AppTheme.primaryColor,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header
+                          _buildHeader(),
+                          const SizedBox(height: 20),
+                          
+                          // Search bar
+                          SearchBarWidget(
+                            readOnly: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SearchScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                          
+                          // Categories
+                          _buildSectionTitle('Danh mục', onViewAll: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CategoriesScreen(),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 12),
+                          _buildCategories(),
+                          const SizedBox(height: 24),
+                          
+                          // Featured products
+                          _buildSectionTitle('Sản phẩm nổi bật'),
+                          const SizedBox(height: 12),
+                          _buildFeaturedProducts(),
+                          const SizedBox(height: 24),
+                          
+                          // New products
+                          _buildSectionTitle('Sản phẩm mới'),
+                          const SizedBox(height: 12),
+                          _buildNewProducts(),
+                          const SizedBox(height: 20),
+                        ],
                       ),
-                    );
-                  }),
-                  const SizedBox(height: 12),
-                  _buildCategories(),
-                  const SizedBox(height: 24),
-                  
-                  // Featured products
-                  _buildSectionTitle('Sản phẩm nổi bật'),
-                  const SizedBox(height: 12),
-                  _buildFeaturedProducts(),
-                  const SizedBox(height: 24),
-                  
-                  // New products
-                  _buildSectionTitle('Sản phẩm mới'),
-                  const SizedBox(height: 12),
-                  _buildNewProducts(),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          ),
+                    ),
+                  ),
+                ),
         ),
       ),
     );
@@ -137,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Xin chào! 👋',
               style: TextStyle(
                 fontSize: 16,

@@ -11,7 +11,7 @@ class CartProvider extends ChangeNotifier {
   double get totalAmount => _items.fold(0, (sum, item) => sum + item.totalPrice);
 
   void addToCart(CartItem item) {
-    final index = _items.indexWhere((i) => i.product.id == item.product.id);
+    final index = _items.indexWhere((i) => i.product.productId == item.product.productId);
     if (index != -1) {
       _items[index].quantity += item.quantity;
     } else {
@@ -21,12 +21,12 @@ class CartProvider extends ChangeNotifier {
   }
 
   void removeFromCart(String productId) {
-    _items.removeWhere((item) => item.product.id == productId);
+    _items.removeWhere((item) => item.product.productId == productId);
     notifyListeners();
   }
 
   void updateQuantity(String productId, int quantity) {
-    final index = _items.indexWhere((item) => item.product.id == productId);
+    final index = _items.indexWhere((item) => item.product.productId == productId);
     if (index != -1) {
       if (quantity <= 0) {
         _items.removeAt(index);
@@ -43,6 +43,6 @@ class CartProvider extends ChangeNotifier {
   }
 
   bool isInCart(String productId) {
-    return _items.any((item) => item.product.id == productId);
+    return _items.any((item) => item.product.productId == productId);
   }
 }

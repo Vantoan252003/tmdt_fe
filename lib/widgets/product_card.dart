@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/product.dart';
 import '../utils/app_theme.dart';
 import '../screens/product_detail_screen.dart';
@@ -41,7 +42,7 @@ class ProductCard extends StatelessWidget {
           children: [
             // Product image
             Container(
-              height: 120,
+              height: 110,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -56,12 +57,38 @@ class ProductCard extends StatelessWidget {
                   topRight: Radius.circular(16),
                 ),
               ),
-              child: Center(
-                child: Text(
-                  product.imageUrl,
-                  style: const TextStyle(fontSize: 48),
-                ),
-              ),
+              child: product.imageUrl.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                      child: CachedNetworkImage(
+                        imageUrl: product.imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: 120,
+                        placeholder: (context, url) => Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => const Center(
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 48,
+                            color: AppTheme.textLight,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const Center(
+                      child: Icon(
+                        Icons.image,
+                        size: 48,
+                        color: AppTheme.textLight,
+                      ),
+                    ),
             ),
             
             // Product info
@@ -108,27 +135,60 @@ class ProductCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '${product.price.toStringAsFixed(0)}đ',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (product.discountPercentage > 0)
+                              Text(
+                                '${product.price.toStringAsFixed(0)}đ',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color.fromRGBO(160, 174, 192, 1),
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                            Text(
+                              '${product.finalPrice.toStringAsFixed(0)}đ',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            if (product.discountPercentage > 0)
+                              Container(
+                                margin: const EdgeInsets.only(top: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.discountColor,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '-${product.discountPercentage.toStringAsFixed(0)}%',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
+          
                       GestureDetector(
                         onTap: onAddToCart,
                         child: Container(
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             gradient: AppTheme.primaryGradient,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
                             Icons.add_shopping_cart,
-                            size: 18,
+                            size: 20,
                             color: Colors.white,
                           ),
                         ),

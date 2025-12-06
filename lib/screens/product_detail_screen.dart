@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../utils/app_theme.dart';
 import '../models/product.dart';
 import '../widgets/gradient_button.dart';
@@ -273,12 +274,35 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Center(
-            child: Text(
-              images[selectedImageIndex],
-              style: const TextStyle(fontSize: 100),
-            ),
-          ),
+          child: images[selectedImageIndex].isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: CachedNetworkImage(
+                    imageUrl: images[selectedImageIndex],
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: 250,
+                    placeholder: (context, url) => Center(
+                      child: CircularProgressIndicator(
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => const Center(
+                      child: Icon(
+                        Icons.image_not_supported,
+                        size: 80,
+                        color: AppTheme.textLight,
+                      ),
+                    ),
+                  ),
+                )
+              : const Center(
+                  child: Icon(
+                    Icons.image,
+                    size: 80,
+                    color: AppTheme.textLight,
+                  ),
+                ),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -310,12 +334,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       width: 2,
                     ),
                   ),
-                  child: Center(
-                    child: Text(
-                      images[index],
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                  ),
+                  child: images[index].isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: CachedNetworkImage(
+                            imageUrl: images[index],
+                            fit: BoxFit.cover,
+                            width: 60,
+                            height: 60,
+                            placeholder: (context, url) => Center(
+                              child: CircularProgressIndicator(
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => const Icon(
+                              Icons.image_not_supported,
+                              size: 24,
+                              color: AppTheme.textLight,
+                            ),
+                          ),
+                        )
+                      : const Icon(
+                          Icons.image,
+                          size: 24,
+                          color: AppTheme.textLight,
+                        ),
                 ),
               );
             },
