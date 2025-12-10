@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import '../screens/home_screen.dart';
 import '../screens/cart_screen.dart';
+import '../screens/notification_screen.dart';
 import '../screens/profile_screen.dart';
 import '../providers/cart_provider.dart';
+import '../providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -14,11 +16,11 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
 
   final List<Widget> _screens = const [
     HomeScreen(),
     CartScreen(),
+    NotificationScreen(),
     ProfileScreen(),
   ];
 
@@ -38,8 +40,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_currentIndex],
+    return Consumer<NavigationProvider>(
+      builder: (context, navProvider, child) {
+        return Scaffold(
+          body: _screens[navProvider.currentIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -70,11 +74,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   index: 1,
                   showBadge: true,
                 ),
+                  _buildNavItem(
+                  icon: Icons.notifications_outlined,
+                  activeIcon: Icons.notifications,
+                  label: 'Thông báo',
+                  index: 2,
+                  showBadge: true,
+                ),
                 _buildNavItem(
                   icon: Icons.person_outline,
                   activeIcon: Icons.person,
                   label: 'Cá nhân',
-                  index: 2,
+                  index: 3,
                 ),
               ],
             ),
@@ -83,7 +94,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
     );
   }
-
+  );
+}
   Widget _buildNavItem({
     required IconData icon,
     required IconData activeIcon,
@@ -91,13 +103,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     required int index,
     bool showBadge = false,
   }) {
-    final isActive = _currentIndex == index;
+    final navProvider = Provider.of<NavigationProvider>(context, listen: false);
+    final isActive = navProvider.currentIndex == index;
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
+        navProvider.setIndex(index);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -105,7 +116,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           gradient: isActive ? AppTheme.primaryGradient : null,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
               clipBehavior: Clip.none,
@@ -149,20 +161,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   ),
               ],
             ),
-            if (isActive) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+          
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? Colors.white : AppTheme.textLight,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
-            ],
+            ),
           ],
         ),
       ),
     );
   }
+  
 }

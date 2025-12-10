@@ -3,6 +3,7 @@ import '../utils/app_theme.dart';
 import '../widgets/gradient_button.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_item_response.dart';
+import '../providers/navigation_provider.dart';
 import 'package:provider/provider.dart';
 
 class CartScreen extends StatefulWidget {
@@ -176,7 +177,8 @@ class _CartScreenState extends State<CartScreen> {
           GradientButton(
             text: 'Tiếp tục mua sắm',
             onPressed: () {
-              Navigator.of(context).pop();
+              final navProvider = Provider.of<NavigationProvider>(context, listen: false);
+              navProvider.setIndex(0);
             },
           ),
         ],
