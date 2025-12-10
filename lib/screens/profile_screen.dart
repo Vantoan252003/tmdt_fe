@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:student_ecommerce/screens/address_screen.dart';
+import 'package:student_ecommerce/screens/profile_edit_screen.dart';
 import '../utils/app_theme.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
@@ -101,7 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Profile header
                 _buildProfileHeader(_user!),
                 const SizedBox(height: 20),
-                
+
                 // Menu items
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -113,7 +114,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _MenuItem(
                             icon: Icons.person_outline,
                             title: 'Thông tin cá nhân',
-                            onTap: () {},
+                            onTap: () {
+                               if (_user != null)
+                              {
+                                Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>  ProfileEditScreen(user: _user!)),
+                              );
+                              }
+                            },
                           ),
                           _MenuItem(
                             icon: Icons.location_on_outlined,
@@ -135,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      
+
                       _buildMenuSection(
                         title: 'Đơn hàng',
                         items: [
@@ -157,7 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      
+
                       _buildMenuSection(
                         title: 'Hỗ trợ',
                         items: [
@@ -179,7 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      
+
                       _buildMenuSection(
                         title: 'Cài đặt',
                         items: [
@@ -201,7 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Logout button
                       _buildLogoutButton(context),
                       const SizedBox(height: 24),
@@ -248,7 +258,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Name
           Text(
             user.fullName,
@@ -259,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          
+
           // Email
           Text(
             user.email,
@@ -269,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Stats
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -466,14 +476,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-class _MenuItem {
+class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
 
-  _MenuItem({
+  const _MenuItem({
+    Key? key,
     required this.icon,
     required this.title,
     required this.onTap,
-  });
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap, // ✅ bắt sự kiện nhấn
+      borderRadius: BorderRadius.circular(10),
+      splashColor: Colors.deepPurple.withOpacity(0.1),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.deepPurple),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
 }

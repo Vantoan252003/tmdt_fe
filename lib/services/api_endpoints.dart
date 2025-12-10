@@ -36,6 +36,8 @@ class ApiEndpoints {
   static const String profile = '$baseUrl/user/profile';
   static const String updateProfile = '$baseUrl/user/profile/update';
   static const String changePassword = '$baseUrl/user/password/change';
+  static const String userProfile = '$baseUrl/user/profile';
+ 
   
   // Wishlist endpoints
   static const String wishlist = '$baseUrl/wishlist';
@@ -58,4 +60,6 @@ class ApiEndpoints {
   // Payment endpoints
   static const String paymentMethods = '$baseUrl/payment/methods';
   static const String processPayment = '$baseUrl/payment/process';
+
+
 }

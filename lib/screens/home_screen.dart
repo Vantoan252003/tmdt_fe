@@ -274,14 +274,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFeaturedProducts() {
     return SizedBox(
-      height: 240,
+      height: 270,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: featuredProducts.length,
         itemBuilder: (context, index) {
           return Container(
             width: 160,
-            margin: const EdgeInsets.only(right: 12),
+            margin: const EdgeInsets.only(right: 20),
             child: ProductCard(
               product: featuredProducts[index],
               onAddToCart: () => _addToCart(featuredProducts[index]),
@@ -299,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.7,
-        crossAxisSpacing: 12,
+        crossAxisSpacing: 1,
         mainAxisSpacing: 12,
       ),
       itemCount: newProducts.length,
