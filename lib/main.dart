@@ -6,6 +6,7 @@ import 'providers/address_provider.dart';
 import 'providers/location_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/navigation_provider.dart';
+import 'providers/notification_provider.dart';
 import 'screens/main_navigation_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
@@ -31,6 +32,7 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
         title: 'Student E-Commerce',

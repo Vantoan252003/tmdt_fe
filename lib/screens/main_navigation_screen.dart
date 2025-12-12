@@ -6,6 +6,7 @@ import '../screens/notification_screen.dart';
 import '../screens/profile_screen.dart';
 import '../providers/cart_provider.dart';
 import '../providers/navigation_provider.dart';
+import '../providers/notification_provider.dart';
 import 'package:provider/provider.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -30,12 +31,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     // Delay cart loading until after the first frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadCartItems();
+      _loadUnreadNotifications();
     });
   }
 
   Future<void> _loadCartItems() async {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     await cartProvider.loadCartItems();
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
+    await notificationProvider.loadUnreadCount();
   }
 
   @override
@@ -131,33 +138,61 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   Positioned(
                     right: -8,
                     top: -8,
-                    child: Consumer<CartProvider>(
-                      builder: (context, cartProvider, child) {
-                        if (cartProvider.itemCount == 0) {
-                          return const SizedBox();
-                        }
-                        return Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: AppTheme.errorColor,
-                            shape: BoxShape.circle,
+                    child: index == 1
+                        ? Consumer<CartProvider>(
+                            builder: (context, cartProvider, child) {
+                              if (cartProvider.itemCount == 0) {
+                                return const SizedBox();
+                              }
+                              return Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.errorColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 18,
+                                  minHeight: 18,
+                                ),
+                                child: Text(
+                                  '${cartProvider.itemCount}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              );
+                            },
+                          )
+                        : Consumer<NotificationProvider>(
+                            builder: (context, notificationProvider, child) {
+                              if (notificationProvider.unreadCount == 0) {
+                                return const SizedBox();
+                              }
+                              return Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.errorColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 18,
+                                  minHeight: 18,
+                                ),
+                                child: Text(
+                                  '${notificationProvider.unreadCount}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              );
+                            },
                           ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Text(
-                            '${cartProvider.itemCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        );
-                      },
-                    ),
                   ),
               ],
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:student_ecommerce/screens/address_screen.dart';
 import 'package:student_ecommerce/screens/profile_edit_screen.dart';
 import 'package:student_ecommerce/screens/orders_screen.dart';
+import 'package:student_ecommerce/screens/notification_screen.dart';
 import '../utils/app_theme.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
@@ -204,7 +205,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _MenuItem(
                             icon: Icons.notifications_outlined,
                             title: 'Thông báo',
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const NotificationScreen(),
+                                ),
+                              );
+                            },
                           ),
                           _MenuItem(
                             icon: Icons.language_outlined,
