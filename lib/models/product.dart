@@ -20,6 +20,18 @@ class Product {
   final String createdAt;
   final String updatedAt;
 
+  // Shop information
+  final String? shopName;
+  final String? shopDescription;
+  final String? shopLogoUrl;
+  final String? shopBannerUrl;
+  final String? shopAddress;
+  final String? shopPhoneNumber;
+  final String? shopStatus;
+  final double? shopRating;
+  final int? totalProducts;
+  final int? totalOrders;
+
   Product({
     required this.productId,
     required this.shopId,
@@ -41,6 +53,16 @@ class Product {
     this.imageUrl4,
     required this.createdAt,
     required this.updatedAt,
+    this.shopName,
+    this.shopDescription,
+    this.shopLogoUrl,
+    this.shopBannerUrl,
+    this.shopAddress,
+    this.shopPhoneNumber,
+    this.shopStatus,
+    this.shopRating,
+    this.totalProducts,
+    this.totalOrders,
   });
 
   // Getters for backward compatibility
@@ -84,6 +106,16 @@ class Product {
       imageUrl4: json['imageUrl4'],
       createdAt: json['createdAt'] ?? '',
       updatedAt: json['updatedAt'] ?? '',
+      shopName: json['shopName'],
+      shopDescription: json['shopDescription'],
+      shopLogoUrl: json['shopLogoUrl'],
+      shopBannerUrl: json['shopBannerUrl'],
+      shopAddress: json['shopAddress'],
+      shopPhoneNumber: json['shopPhoneNumber'],
+      shopStatus: json['shopStatus'],
+      shopRating: json['shopRating'] != null ? (json['shopRating'] as num).toDouble() : null,
+      totalProducts: json['totalProducts'],
+      totalOrders: json['totalOrders'],
     );
   }
 
@@ -109,6 +141,16 @@ class Product {
       'imageUrl4': imageUrl4,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      'shopName': shopName,
+      'shopDescription': shopDescription,
+      'shopLogoUrl': shopLogoUrl,
+      'shopBannerUrl': shopBannerUrl,
+      'shopAddress': shopAddress,
+      'shopPhoneNumber': shopPhoneNumber,
+      'shopStatus': shopStatus,
+      'shopRating': shopRating,
+      'totalProducts': totalProducts,
+      'totalOrders': totalOrders,
     };
   }
 }

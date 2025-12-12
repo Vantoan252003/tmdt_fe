@@ -53,22 +53,22 @@ class ReviewResponse {
   final String userId;
   final String userName;
   final String productId;
+  final String? orderId;
   final int rating;
   final String? comment;
-  final List<String>? imageUrls;
+  final List<String>? images;
   final String createdAt;
-  final String updatedAt;
 
   ReviewResponse({
     required this.reviewId,
     required this.userId,
     required this.userName,
     required this.productId,
+    this.orderId,
     required this.rating,
     this.comment,
-    this.imageUrls,
+    this.images,
     required this.createdAt,
-    required this.updatedAt,
   });
 
   factory ReviewResponse.fromJson(Map<String, dynamic> json) {
@@ -77,13 +77,13 @@ class ReviewResponse {
       userId: json['userId'] ?? '',
       userName: json['userName'] ?? 'Người dùng',
       productId: json['productId'] ?? '',
+      orderId: json['orderId'],
       rating: json['rating'] ?? 0,
       comment: json['comment'],
-      imageUrls: json['imageUrls'] != null
-          ? List<String>.from(json['imageUrls'] as List)
+      images: json['images'] != null
+          ? List<String>.from(json['images'] as List)
           : null,
       createdAt: json['createdAt'] ?? '',
-      updatedAt: json['updatedAt'] ?? '',
     );
   }
 
@@ -93,11 +93,11 @@ class ReviewResponse {
       'userId': userId,
       'userName': userName,
       'productId': productId,
+      'orderId': orderId,
       'rating': rating,
       'comment': comment,
-      'imageUrls': imageUrls,
+      'images': images,
       'createdAt': createdAt,
-      'updatedAt': updatedAt,
     };
   }
 }

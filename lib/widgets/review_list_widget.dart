@@ -181,14 +181,14 @@ class ReviewListWidget extends StatelessWidget {
             ),
 
           // Images
-          if (review.imageUrls != null && review.imageUrls!.isNotEmpty)
+          if (review.images != null && review.images!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SizedBox(
                 height: 70,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: review.imageUrls!.length,
+                  itemCount: review.images!.length,
                   itemBuilder: (context, index) {
                     return Container(
                       width: 70,
@@ -197,7 +197,7 @@ class ReviewListWidget extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(4),
                         image: DecorationImage(
-                          image: NetworkImage(review.imageUrls![index]),
+                          image: NetworkImage(review.images![index]),
                           fit: BoxFit.cover,
                         ),
                       ),

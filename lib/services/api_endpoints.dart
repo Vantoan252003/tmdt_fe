@@ -13,6 +13,7 @@ class ApiEndpoints {
   static String productDetail(String id) => '$baseUrl/products/$id';
   static String productsByCategory(String categoryId) => '$baseUrl/products/category/$categoryId';
   static String productsByShop(String shopId) => '$baseUrl/products/shop/$shopId';
+  static String shopDetails(String shopId) => '$baseUrl/products/shop/$shopId/details';
   static String searchProducts = '$baseUrl/products/search';
   
   // Category endpoints
