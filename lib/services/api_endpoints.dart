@@ -1,6 +1,6 @@
 class ApiEndpoints {
   // Base URL
-  static const String baseUrl = 'http://157.66.100.248:8081/api';
+  static const String baseUrl = 'http://192.168.31.96:8080/api';
   
   // Auth endpoints
   static const String login = '$baseUrl/auth/login';
@@ -62,4 +62,6 @@ class ApiEndpoints {
   static const String processPayment = '$baseUrl/payment/process';
 
 
+  static const String registerFCMToken = '$baseUrl/fcm-tokens/register';
+  static const String deactivateFCMToken = '$baseUrl/fcm-tokens/deactivate';
 }

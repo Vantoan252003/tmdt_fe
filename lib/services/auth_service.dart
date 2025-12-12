@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import 'api_endpoints.dart';
+import 'fcm_service.dart';
 
 class AuthService {
   static const String _tokenKey = 'auth_token';
@@ -85,6 +86,9 @@ class AuthService {
 
   // Logout method
   static Future<void> logout() async {
+    // Deactivate FCM token before logging out
+    await FCMService().deactivateCurrentToken();
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_userDataKey);

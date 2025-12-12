@@ -4,6 +4,7 @@ import '../widgets/gradient_button.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_item_response.dart';
 import '../providers/navigation_provider.dart';
+import 'checkout_screen.dart';
 import 'package:provider/provider.dart';
 
 class CartScreen extends StatefulWidget {
@@ -69,6 +70,24 @@ class _CartScreenState extends State<CartScreen> {
         SnackBar(content: Text('Lỗi: $e')),
       );
     }
+  }
+
+  void _navigateToCheckout(BuildContext context, CartProvider cartProvider) {
+    if (cartProvider.cartItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Giỏ hàng trống')),
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CheckoutScreen(
+          cartItems: cartProvider.cartItems,
+          totalAmount: cartProvider.totalAmount,
+        ),
+      ),
+    );
   }
 
   @override
@@ -339,11 +358,7 @@ class _CartScreenState extends State<CartScreen> {
           const SizedBox(height: 16),
           GradientButton(
             text: 'Thanh toán',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tính năng thanh toán sẽ được thêm sau')),
-              );
-            },
+            onPressed: () => _navigateToCheckout(context, cartProvider),
           ),
         ],
       ),

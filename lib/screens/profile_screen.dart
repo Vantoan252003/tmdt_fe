@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:student_ecommerce/screens/address_screen.dart';
 import 'package:student_ecommerce/screens/profile_edit_screen.dart';
+import 'package:student_ecommerce/screens/orders_screen.dart';
 import '../utils/app_theme.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
@@ -152,7 +153,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _MenuItem(
                             icon: Icons.shopping_bag_outlined,
                             title: 'Đơn hàng của tôi',
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const OrdersScreen(),
+                                ),
+                              );
+                            },
                           ),
                           _MenuItem(
                             icon: Icons.favorite_outline,

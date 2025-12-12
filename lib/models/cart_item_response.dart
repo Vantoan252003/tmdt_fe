@@ -7,6 +7,7 @@ class CartItemResponse {
   final double price;
   final double subtotal;
   final String? mainImageUrl;
+  final String? shopId;
 
   CartItemResponse({
     required this.cartItemId,
@@ -17,6 +18,7 @@ class CartItemResponse {
     required this.price,
     required this.subtotal,
     this.mainImageUrl,
+    this.shopId,
   });
 
   factory CartItemResponse.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class CartItemResponse {
       price: (json['price'] ?? 0).toDouble(),
       subtotal: (json['subtotal'] ?? 0).toDouble(),
       mainImageUrl: json['mainImageUrl'],
+      shopId: json['shopId'],
     );
   }
 
@@ -42,6 +45,7 @@ class CartItemResponse {
       'price': price,
       'subtotal': subtotal,
       'mainImageUrl': mainImageUrl,
+      if (shopId != null) 'shopId': shopId,
     };
   }
 }

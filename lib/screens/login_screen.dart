@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:student_ecommerce/screens/register_screen.dart';
 import '../services/auth_service.dart';
+import '../services/fcm_token_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/gradient_button.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'main_navigation_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -40,6 +42,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (result['success']) {
       if (mounted) {
+        // Register FCM token after successful login
+        try {
+          final fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken != null) {
+            await FCMTokenService.registerToken(fcmToken);
+          }
+        } catch (e) {
+          print('Error registering FCM token: $e');
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result['message']),

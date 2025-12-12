@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/address_provider.dart';
@@ -8,9 +9,13 @@ import 'providers/navigation_provider.dart';
 import 'screens/main_navigation_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
+import 'services/fcm_service.dart';
 import 'utils/app_theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await FCMService().initialize();
   runApp(const MainApp());
 }
 
@@ -67,6 +72,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
     setState(() {
       _isLoggedIn = isLoggedIn;
     });
+    if (isLoggedIn) {
+      await FCMService().registerCurrentToken();
+    }
   }
 
   @override

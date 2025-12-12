@@ -5,6 +5,7 @@ import '../models/product.dart';
 import '../widgets/gradient_button.dart';
 import '../providers/cart_provider.dart';
 import 'package:provider/provider.dart';
+import 'review_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -484,10 +485,38 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ],
       ),
       child: SafeArea(
-        child: GradientButton(
-          text: 'Thêm vào giỏ hàng',
-          icon: Icons.shopping_cart,
-          onPressed: _addToCart,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ReviewScreen(
+                        product: widget.product,
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.star_outline),
+                label: const Text('Xem đánh giá'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange[100],
+                  foregroundColor: Colors.orange[700],
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            GradientButton(
+              text: 'Thêm vào giỏ hàng',
+              icon: Icons.shopping_cart,
+              onPressed: _addToCart,
+            ),
+          ],
         ),
       ),
     );
