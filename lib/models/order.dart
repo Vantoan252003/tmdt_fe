@@ -99,12 +99,14 @@ class CreateOrderRequest {
   final String shippingAddressId;
   final String paymentMethod;
   final String? note;
+  final String? voucherId;
 
   CreateOrderRequest({
     required this.items,
     required this.shippingAddressId,
     required this.paymentMethod,
     this.note,
+    this.voucherId,
   });
 
   Map<String, dynamic> toJson() {
@@ -113,6 +115,7 @@ class CreateOrderRequest {
       'shippingAddressId': shippingAddressId,
       'paymentMethod': paymentMethod,
       if (note != null && note!.isNotEmpty) 'note': note,
+      if (voucherId != null) 'voucherId': voucherId,
     };
   }
 }

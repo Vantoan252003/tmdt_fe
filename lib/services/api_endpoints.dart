@@ -62,6 +62,8 @@ class ApiEndpoints {
   static const String paymentMethods = '$baseUrl/payment/methods';
   static const String processPayment = '$baseUrl/payment/process';
 
+  // Voucher endpoints
+  static String availableVouchers(String shopId) => '$baseUrl/vouchers/available?shopId=$shopId';
 
   static const String registerFCMToken = '$baseUrl/fcm-tokens/register';
   static const String deactivateFCMToken = '$baseUrl/fcm-tokens/deactivate';

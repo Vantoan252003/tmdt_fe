@@ -72,13 +72,14 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  void _navigateToCheckout(BuildContext context, CartProvider cartProvider) {
+  void _navigateToCheckout(BuildContext context, CartProvider cartProvider) async {
     if (cartProvider.cartItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Giỏ hàng trống')),
       );
       return;
     }
+    await cartProvider.loadCartItems();
 
     Navigator.of(context).push(
       MaterialPageRoute(

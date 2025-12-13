@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 import '../models/address.dart';
 import '../models/cart_item_response.dart';
 import '../models/order.dart';
+import '../models/voucher.dart';
 import '../services/address_service.dart';
 import '../services/order_service.dart';
 import '../providers/cart_provider.dart';
 import '../utils/app_theme.dart';
 import '../widgets/gradient_button.dart';
+import '../widgets/voucher_selector_widget.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final List<CartItemResponse> cartItems;
@@ -33,6 +35,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String _paymentMethod = 'COD';
   bool _isLoadingAddresses = true;
   bool _isCreatingOrder = false;
+  Voucher? _selectedVoucher;
 
   @override
   void initState() {
@@ -107,7 +110,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         shippingAddressId: _selectedAddress!.addressId,
         paymentMethod: _paymentMethod,
         note: _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null,
+        voucherId: _selectedVoucher?.voucherId,
       );
+
+      // Debug: Print full request body
+      print('Create Order Request Body: ${request.toJson()}');
 
       // Call API to create order
       await _orderService.createOrder(request);
@@ -172,6 +179,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   _buildAddressSection(),
                   const Divider(height: 1, thickness: 8, color: Color(0xFFF5F5F5)),
                   _buildOrderItemsSection(),
+                  const Divider(height: 1, thickness: 8, color: Color(0xFFF5F5F5)),
+                  _buildVoucherSection(),
                   const Divider(height: 1, thickness: 8, color: Color(0xFFF5F5F5)),
                   _buildPaymentMethodSection(),
                   const Divider(height: 1, thickness: 8, color: Color(0xFFF5F5F5)),
@@ -501,6 +510,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  Widget _buildVoucherSection() {
+    // Get shopId from first cart item
+    final shopId = widget.cartItems.isNotEmpty && widget.cartItems.first.shopId != null
+        ? widget.cartItems.first.shopId!
+        : '';
+
+    if (shopId.isEmpty) {
+      print ( "Shop ID $shopId");
+      return const SizedBox.shrink();
+    }
+
+    return VoucherSelectorWidget(
+      shopId: shopId,
+      orderValue: widget.totalAmount,
+      selectedVoucher: _selectedVoucher,
+      onVoucherSelected: (voucher) {
+        setState(() {
+          _selectedVoucher = voucher;
+        });
+      },
+    );
+  }
+
+  double get _voucherDiscount {
+    return _selectedVoucher?.calculateDiscount(widget.totalAmount) ?? 0.0;
+  }
+
+  double get _finalTotal {
+    return widget.totalAmount - _voucherDiscount;
+  }
+
   Widget _buildOrderSummary() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -543,6 +583,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ],
           ),
+          if (_selectedVoucher != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Voucher giảm giá:',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                ),
+                Text(
+                  '-${_voucherDiscount.toStringAsFixed(0)}₫',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.successColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
           const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -555,7 +615,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               Text(
-                '${widget.totalAmount.toStringAsFixed(0)}₫',
+                '${_finalTotal.toStringAsFixed(0)}₫',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
