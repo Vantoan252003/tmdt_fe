@@ -113,10 +113,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         voucherId: _selectedVoucher?.voucherId,
       );
 
-      // Debug: Print full request body
-      print('Create Order Request Body: ${request.toJson()}');
 
-      // Call API to create order
       await _orderService.createOrder(request);
 
       if (mounted) {

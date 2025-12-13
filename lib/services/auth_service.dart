@@ -122,6 +122,12 @@ class AuthService {
     return null;
   }
 
+  // Get user ID from stored user data
+  static Future<String?> getUserId() async {
+    final user = await getUserData();
+    return user?.id;
+  }
+
   static Future<Map<String, dynamic>> updateUserInfo(User user) async {
     try {
       final token = await getToken();

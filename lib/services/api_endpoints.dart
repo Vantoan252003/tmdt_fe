@@ -65,6 +65,19 @@ class ApiEndpoints {
   // Voucher endpoints
   static String availableVouchers(String shopId) => '$baseUrl/vouchers/available?shopId=$shopId';
 
+  // Shop Review endpoints
+  static String canReviewShop(String shopId) => '$baseUrl/shop-reviews/shop/$shopId/can-review';
+  static String createShopReview(String shopId) => '$baseUrl/shop-reviews/shop/$shopId';
+  static String shopReviews(String shopId) => '$baseUrl/shop-reviews/shop/$shopId';
+
+  // Chat endpoints
+  static const String chatWebSocket = 'http://192.168.31.96:8080/ws';
+  static const String conversations = '$baseUrl/chat/conversations';
+  static String conversationMessages(String conversationId) => '$baseUrl/chat/conversations/$conversationId/messages';
+  static const String sendMessage = '$baseUrl/chat/send';
+  static String markAsRead(String conversationId) => '$baseUrl/chat/conversations/$conversationId/mark-read';
+  static const String startConversation = '$baseUrl/chat/conversations/start';
+
   static const String registerFCMToken = '$baseUrl/fcm-tokens/register';
   static const String deactivateFCMToken = '$baseUrl/fcm-tokens/deactivate';
 }
