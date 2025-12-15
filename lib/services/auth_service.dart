@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../models/user.dart';
 import 'api_endpoints.dart';
 import 'fcm_service.dart';
@@ -83,6 +84,48 @@ class AuthService {
       return {'success': false, 'message': 'Lỗi kết nối: $e'};
     }
   }
+
+  // Facebook Login
+  static Future<Map<String, dynamic>> loginWithFacebook() async {
+  try {
+    final LoginResult result = await FacebookAuth.instance.login(
+      permissions: ['email', 'public_profile'],
+    );
+
+    if (result.status == LoginStatus.success) {
+      final accessToken = result.accessToken!.tokenString;
+
+      final response = await http.post(
+        Uri.parse(ApiEndpoints.facebookLogin),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'accessToken': accessToken,  
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_tokenKey, data['data']['token']);
+        
+        final user = User.fromJson(data['data']);
+        await prefs.setString(_userDataKey, jsonEncode(user.toJson()));
+
+        return {'success': true, 'message': 'Đăng nhập Facebook thành công'};
+      }
+      return {'success': false, 'message': data['message']};
+    }
+    
+    if (result.status == LoginStatus.cancelled) {
+      return {'success': false, 'message': 'Đã hủy đăng nhập'};
+    }
+    
+    return {'success': false, 'message': result.message};
+  } catch (e) {
+    return {'success': false, 'message': 'Lỗi: $e'};
+  }
+}
 
   // Logout method
   static Future<void> logout() async {

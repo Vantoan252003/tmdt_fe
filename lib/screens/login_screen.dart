@@ -20,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _isFacebookLoading = false;
 
   @override
   void dispose() {
@@ -39,6 +40,51 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     setState(() => _isLoading = false);
+
+    if (result['success']) {
+      if (mounted) {
+        try {
+          final fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken != null) {
+            await FCMTokenService.registerToken(fcmToken);
+          }
+        } catch (e) {
+          print('Error registering FCM token: $e');
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: const Color(0xFF4CAF50),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: const Color(0xFFEE4D2D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleFacebookLogin() async {
+    setState(() => _isFacebookLoading = true);
+
+    final result = await AuthService.loginWithFacebook();
+
+    setState(() => _isFacebookLoading = false);
 
     if (result['success']) {
       if (mounted) {
@@ -258,9 +304,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               icon: Icons.facebook,
                               label: 'Facebook',
                               color: const Color(0xFF1877F2),
-                              onTap: () {
-                                // Facebook login
-                              },
+                              isLoading: _isFacebookLoading,
+                              onTap: _isFacebookLoading ? () {} : _handleFacebookLogin,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -270,7 +315,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               label: 'Google',
                               color: const Color(0xFFDB4437),
                               onTap: () {
-                                // Google login
+                                // Google login - Coming soon
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Tính năng đang phát triển'),
+                                    backgroundColor: Color(0xFFFF9800),
+                                  ),
+                                );
                               },
                             ),
                           ),
@@ -386,30 +437,41 @@ class _LoginScreenState extends State<LoginScreen> {
     required String label,
     required Color color,
     required VoidCallback onTap,
+    bool isLoading = false,
   }) {
     return OutlinedButton(
-      onPressed: onTap,
+      onPressed: isLoading ? null : onTap,
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
         ),
         side: BorderSide(color: Colors.grey[300]!),
+        disabledBackgroundColor: Colors.grey[100],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey[800],
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+      child: isLoading
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: color, size: 22),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.grey[800],
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
-  }}
+  }
+}
