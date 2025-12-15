@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EduMart</string>
+    <string name="facebook_app_id">873258401857349</string>
+    <string name="fb_login_protocol_scheme">fb873258401857349</string>
+    <string name="facebook_client_token">a16545093f34cf94d10615162b0b345f</string>
+</resources>
