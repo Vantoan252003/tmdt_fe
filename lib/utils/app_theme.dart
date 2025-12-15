@@ -16,8 +16,8 @@ class AppTheme {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF667eea),
-      Color(0xFF764ba2),
+      Color(0xFFEE4D2D),
+      Color(0xFFFF6347),
     ],
   );
 
@@ -31,8 +31,8 @@ class AppTheme {
   );
 
   // Primary colors
-  static const Color primaryColor = Color(0xFF667eea);
-  static const Color secondaryColor = Color(0xFF764ba2);
+  static const Color primaryColor = Color(0xFFEE4D2D);
+  static const Color secondaryColor = Color(0xFFFF6347);
   static const Color accentColor = Color(0xFFf093fb);
   
   // Text colors

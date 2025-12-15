@@ -173,36 +173,48 @@ class _ReviewScreenState extends State<ReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text(
           'Đánh giá sản phẩm',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppTheme.primaryColor,
+            color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFEE4D2D),
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppTheme.primaryColor),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryColor),
+              child: CircularProgressIndicator(color: Color(0xFFEE4D2D)),
             )
           : SingleChildScrollView(
               child: Column(
                 children: [
-                  // Product info
+                  // Product info card
                   Container(
+                    margin: const EdgeInsets.all(12),
                     padding: const EdgeInsets.all(16),
-                    color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Row(
                       children: [
                         Container(
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
                             color: Colors.grey[200],
                           ),
                           child: widget.product.mainImageUrl != null
@@ -223,19 +235,19 @@ class _ReviewScreenState extends State<ReviewScreen> {
                               Text(
                                 widget.product.productName,
                                 style: const TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 8),
                               Text(
                                 '${widget.product.price.toStringAsFixed(0)}₫',
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryColor,
+                                  color: Color(0xFFEE4D2D),
                                 ),
                               ),
                             ],
@@ -244,13 +256,24 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ],
                     ),
                   ),
-                  const Divider(height: 1),
+
 
                   // Rating stats
                   if (_ratingStats != null)
                     Container(
+                      margin: const EdgeInsets.all(12),
                       padding: const EdgeInsets.all(16),
-                      color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -261,7 +284,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           Row(
                             children: [
                               Column(
@@ -273,13 +296,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                         _ratingStats!.averageRating
                                             .toStringAsFixed(1),
                                         style: const TextStyle(
-                                          fontSize: 32,
+                                          fontSize: 36,
                                           fontWeight: FontWeight.bold,
-                                          color: AppTheme.primaryColor,
+                                          color: Color(0xFFEE4D2D),
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: 12),
                                       Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
@@ -287,16 +311,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                                 5,
                                                 (index) => Icon(
                                                   Icons.star,
-                                                  size: 16,
+                                                  size: 18,
                                                   color: index <
                                                           _ratingStats!.averageRating
                                                               .toInt()
-                                                      ? AppTheme.ratingColor
+                                                      ? const Color(0xFFFBBF24)
                                                       : Colors.grey[300],
                                                 ),
                                               ),
                                             ],
                                           ),
+                                          const SizedBox(height: 4),
                                           Text(
                                             '${_ratingStats!.totalReviews} đánh giá',
                                             style: TextStyle(
@@ -315,13 +340,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         ],
                       ),
                     ),
-                  const Divider(height: 1),
 
                   // Create review form
                   if (_canReview)
                     Container(
+                      margin: const EdgeInsets.all(12),
                       padding: const EdgeInsets.all(16),
-                      color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -337,9 +372,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           // Rating selector
                           const Text(
                             'Đánh giá sao',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           Row(
                             children: List.generate(
                               5,
@@ -351,20 +389,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                 },
                                 child: Icon(
                                   Icons.star,
-                                  size: 36,
+                                  size: 40,
                                   color: index < _rating
-                                      ? AppTheme.ratingColor
+                                      ? const Color(0xFFFBBF24)
                                       : Colors.grey[300],
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
 
                           // Comment
                           const Text(
                             'Nhận xét',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           TextField(
@@ -372,8 +413,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                             maxLines: 4,
                             decoration: InputDecoration(
                               hintText: 'Chia sẻ trải nghiệm của bạn với sản phẩm này...',
+                              hintStyle: TextStyle(color: Colors.grey[400]),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.grey[300]!),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -382,26 +425,30 @@ class _ReviewScreenState extends State<ReviewScreen> {
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: const BorderSide(
-                                  color: AppTheme.primaryColor,
+                                  color: Color(0xFFEE4D2D),
                                   width: 2,
                                 ),
                               ),
+                              contentPadding: const EdgeInsets.all(12),
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
 
                           // Images
                           const Text(
                             'Hình ảnh (tối đa 3)',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           GridView.count(
                             crossAxisCount: 3,
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
                             children: [
                               ...List.generate(
                                 _selectedImages.length,
@@ -409,7 +456,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                   children: [
                                     Container(
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(12),
                                         image: DecorationImage(
                                           image: FileImage(_selectedImages[index]),
                                           fit: BoxFit.cover,
@@ -417,8 +464,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                       ),
                                     ),
                                     Positioned(
-                                      top: -8,
-                                      right: -8,
+                                      top: -10,
+                                      right: -10,
                                       child: GestureDetector(
                                         onTap: () {
                                           setState(() {
@@ -426,9 +473,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                           });
                                         },
                                         child: Container(
-                                          padding: const EdgeInsets.all(2),
+                                          padding: const EdgeInsets.all(4),
                                           decoration: const BoxDecoration(
-                                            color: Colors.red,
+                                            color: Color(0xFFEE4D2D),
                                             shape: BoxShape.circle,
                                           ),
                                           child: const Icon(
@@ -449,22 +496,36 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                     decoration: BoxDecoration(
                                       border: Border.all(
                                         color: Colors.grey[300]!,
-                                        style: BorderStyle.solid,
+                                        width: 2,
                                       ),
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: Colors.grey[50],
                                     ),
                                     child: const Center(
-                                      child: Icon(
-                                        Icons.add_photo_alternate_outlined,
-                                        color: AppTheme.primaryColor,
-                                        size: 32,
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.add_photo_alternate_outlined,
+                                            color: Color(0xFFEE4D2D),
+                                            size: 32,
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text(
+                                            'Thêm ảnh',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFFEE4D2D),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
 
                           // Submit button
                           SizedBox(
@@ -472,11 +533,13 @@ class _ReviewScreenState extends State<ReviewScreen> {
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : _submitReview,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.primaryColor,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                backgroundColor: const Color(0xFFEE4D2D),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
+                                elevation: 0,
+                                disabledBackgroundColor: Colors.grey[400],
                               ),
                               child: _isLoading
                                   ? const SizedBox(
@@ -502,11 +565,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     )
                   else if (_reviewStatus.isNotEmpty)
                     Container(
+                      margin: const EdgeInsets.all(12),
                       padding: const EdgeInsets.all(16),
-                      color: Colors.orange[50],
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange[200]!),
+                      ),
                       child: Row(
                         children: [
-                          Icon(Icons.info, color: Colors.orange[700]),
+                          Icon(Icons.info, color: Colors.orange[700], size: 24),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -520,12 +588,22 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         ],
                       ),
                     ),
-                  const Divider(height: 1),
 
                   // Reviews list
                   Container(
+                    margin: const EdgeInsets.all(12),
                     padding: const EdgeInsets.all(16),
-                    color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -541,14 +619,21 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           Center(
                             child: Text(
                               'Chưa có đánh giá nào',
-                              style: TextStyle(color: Colors.grey[600]),
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
                             ),
                           )
                         else
-                          ListView.builder(
+                          ListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: _reviews.length,
+                            separatorBuilder: (context, index) => Divider(
+                              color: Colors.grey[200],
+                              height: 16,
+                            ),
                             itemBuilder: (context, index) {
                               final review = _reviews[index];
                               return _buildReviewItem(review);
@@ -557,6 +642,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
@@ -564,90 +650,91 @@ class _ReviewScreenState extends State<ReviewScreen> {
   }
 
   Widget _buildReviewItem(ReviewResponse review) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                review.userName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              Row(
-                children: List.generate(
-                  5,
-                  (index) => Icon(
-                    Icons.star,
-                    size: 16,
-                    color: index < review.rating
-                        ? AppTheme.ratingColor
-                        : Colors.grey[300],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    review.userName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Comment
-          if (review.comment != null && review.comment!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                review.comment!,
-                style: const TextStyle(fontSize: 13),
-              ),
-            ),
-
-          // Images
-          if (review.images != null && review.images!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: SizedBox(
-                height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: review.images!.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      width: 80,
-                      height: 80,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        image: DecorationImage(
-                          image: NetworkImage(review.images![index]),
-                          fit: BoxFit.cover,
-                        ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: List.generate(
+                      5,
+                      (index) => Icon(
+                        Icons.star,
+                        size: 16,
+                        color: index < review.rating
+                            ? const Color(0xFFFBBF24)
+                            : Colors.grey[300],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
             ),
+            Text(
+              review.createdAt,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
 
-          // Date
-          Text(
-            review.createdAt,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey[600],
+        // Comment
+        if (review.comment != null && review.comment!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              review.comment!,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF333333),
+              ),
             ),
           ),
-        ],
-      ),
+
+        // Images
+        if (review.images != null && review.images!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: SizedBox(
+              height: 80,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: review.images!.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    width: 80,
+                    height: 80,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      image: DecorationImage(
+                        image: NetworkImage(review.images![index]),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

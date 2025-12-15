@@ -149,7 +149,7 @@ class _VoucherSelectorWidgetState extends State<VoucherSelectorWidget> {
       onTap: canApply
           ? () {
               widget.onVoucherSelected(isSelected ? null : voucher);
-              Navigator.pop(context);
+              if (Navigator.canPop(context)) Navigator.pop(context);
             }
           : null,
       child: Container(

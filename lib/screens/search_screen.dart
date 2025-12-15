@@ -26,14 +26,16 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
+  // ---------------- SEARCH LOGIC ----------------
   void _performSearch(String query) async {
+    final productProvider =
+        Provider.of<ProductProvider>(context, listen: false);
+
     if (query.isEmpty) {
-      final productProvider = Provider.of<ProductProvider>(context, listen: false);
       productProvider.clearSearchResults();
       return;
     }
 
-    final productProvider = Provider.of<ProductProvider>(context, listen: false);
     await productProvider.searchProducts(
       keyword: query,
       categoryId: _selectedCategoryId,
@@ -44,42 +46,34 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _addToCart(Product product) async {
     try {
-      // Show loading
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Đang thêm vào giỏ hàng...'),
-          duration: Duration(seconds: 1),
+          content: Text("Đang thêm vào giỏ hàng..."),
           backgroundColor: AppTheme.primaryColor,
-          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 1),
         ),
       );
 
-      // Add to cart using CartProvider
       final cartProvider = Provider.of<CartProvider>(context, listen: false);
       await cartProvider.addToCart(product.productId, 1);
 
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đã thêm ${product.productName} vào giỏ hàng'),
-          duration: const Duration(seconds: 2),
+          content: Text("Đã thêm ${product.productName} vào giỏ hàng"),
           backgroundColor: AppTheme.successColor,
-          behavior: SnackBarBehavior.floating,
         ),
       );
     } catch (e) {
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không thể thêm vào giỏ hàng: ${e.toString()}'),
-          duration: const Duration(seconds: 3),
+          content: Text("Lỗi: ${e.toString()}"),
           backgroundColor: AppTheme.errorColor,
-          behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
 
+  // ---------------- BUILD UI ----------------
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -88,78 +82,24 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-          ),
-          title: const Text(
-            'Tìm kiếm',
-            style: TextStyle(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
+        body: SafeArea(
           child: Column(
             children: [
-              // Search bar and filters
-              Row(
-                children: [
-                  Expanded(
-                    child: SearchBarWidget(
-                      controller: _searchController,
-                      onChanged: _performSearch,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton(
-                    onPressed: _showFilterDialog,
-                    icon: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.filter_list,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Active filters
-              if (_selectedCategoryId != null || _minPrice != null || _maxPrice != null)
-                _buildActiveFilters(),
-
-              const SizedBox(height: 16),
-
-              // Results
+              _buildHeader(),
+              const SizedBox(height: 10),
               Expanded(
-                child: _buildResults(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      _buildSearchBarRow(),
+                      const SizedBox(height: 12),
+                      if (_hasFilters()) _buildActiveFilters(),
+                      const SizedBox(height: 12),
+                      Expanded(child: _buildResults()),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -168,58 +108,123 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildResults() {
-    return Consumer<ProductProvider>(
-      builder: (context, productProvider, child) {
-        if (productProvider.isSearching) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
+  // ---------------- HEADER SHOPEE STYLE ----------------
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      decoration: BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(Icons.arrow_back, color: Colors.white, size: 26),
+          ),
+          const SizedBox(width: 12),
+          const Text(
+            "Tìm kiếm sản phẩm",
+            style: TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-        if (productProvider.error != null) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: AppTheme.errorColor,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Lỗi: ${productProvider.error}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppTheme.errorColor),
+  // ---------------- SEARCH BAR + FILTER BUTTON ----------------
+  Widget _buildSearchBarRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
+            child: SearchBarWidget(
+              controller: _searchController,
+              onChanged: _performSearch,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        GestureDetector(
+          onTap: _showFilterDialog,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.filter_list, color: Colors.white, size: 26),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------- RESULTS ----------------
+  Widget _buildResults() {
+    return Consumer<ProductProvider>(
+      builder: (context, provider, child) {
+        if (provider.isSearching) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppTheme.primaryColor),
           );
         }
 
-        final searchResults = productProvider.searchResults;
+        if (provider.error != null) {
+          return Center(
+            child: Text(
+              "Lỗi: ${provider.error}",
+              style: const TextStyle(color: AppTheme.errorColor),
+            ),
+          );
+        }
 
         if (_searchController.text.isEmpty) {
           return _buildSuggestions();
         }
 
-        if (searchResults.isEmpty) {
-          return _buildNoResults();
-        }
+        final results = provider.searchResults;
+        if (results.isEmpty) return _buildNoResults();
 
         return GridView.builder(
+          padding: const EdgeInsets.only(top: 8),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            childAspectRatio: 0.7,
+            childAspectRatio: 0.72,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
-          itemCount: searchResults.length,
-          itemBuilder: (context, index) {
+          itemCount: results.length,
+          itemBuilder: (context, i) {
             return ProductCard(
-              product: searchResults[index],
-              onAddToCart: () => _addToCart(searchResults[index]),
+              product: results[i],
+              onAddToCart: () => _addToCart(results[i]),
             );
           },
         );
@@ -227,58 +232,54 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  // ---------------- SEARCH SUGGESTIONS ----------------
   Widget _buildSuggestions() {
     final suggestions = [
-      '🖊️ Bút viết',
-      '📓 Vở',
-      '🎒 Ba lô',
-      '📐 Thước kẻ',
-      '🔢 Máy tính',
-      '📚 Sách',
+      "🖊️ Bút viết",
+      "🎒 Ba lô",
+      "📒 Vở học sinh",
+      "📐 Thước kẻ",
+      "📚 Sách giáo khoa",
+      "✂️ Dụng cụ học tập",
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Gợi ý tìm kiếm',
+          "Gợi ý tìm kiếm",
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: AppTheme.textPrimary,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: suggestions.map((suggestion) {
+          spacing: 10,
+          runSpacing: 10,
+          children: suggestions.map((s) {
             return GestureDetector(
               onTap: () {
-                _searchController.text = suggestion.substring(2).trim();
+                _searchController.text = s.substring(2).trim();
                 _performSearch(_searchController.text);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(
                   gradient: AppTheme.cardGradient,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
-                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withOpacity(0.06),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
                 child: Text(
-                  suggestion,
+                  s,
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppTheme.textPrimary,
@@ -292,100 +293,75 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  // ---------------- NO RESULTS ----------------
   Widget _buildNoResults() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.primaryColor.withOpacity(0.1),
-                  AppTheme.secondaryColor.withOpacity(0.1),
-                ],
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.search_off,
-              size: 80,
-              color: AppTheme.textLight,
-            ),
-          ),
-          const SizedBox(height: 24),
+          const Icon(Icons.search_off,
+              size: 80, color: AppTheme.textLight),
+          const SizedBox(height: 16),
           const Text(
-            'Không tìm thấy kết quả',
+            "Không tìm thấy kết quả",
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           const Text(
-            'Hãy thử từ khóa khác',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppTheme.textSecondary,
-            ),
+            "Hãy thử từ khóa khác",
+            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
           ),
         ],
       ),
     );
   }
+
+  // ---------------- ACTIVE FILTER BADGE ----------------
+  bool _hasFilters() =>
+      _selectedCategoryId != null || _minPrice != null || _maxPrice != null;
 
   Widget _buildActiveFilters() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: AppTheme.primaryColor.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.filter_list,
-            size: 16,
-            color: AppTheme.primaryColor,
-          ),
-          const SizedBox(width: 8),
+          const Icon(Icons.filter_alt, color: AppTheme.primaryColor, size: 18),
+          const SizedBox(width: 6),
           Expanded(
             child: Text(
-              _getActiveFiltersText(),
+              _filterText(),
               style: const TextStyle(
                 fontSize: 12,
-                color: AppTheme.primaryColor,
                 fontWeight: FontWeight.w500,
+                color: AppTheme.primaryColor,
               ),
             ),
           ),
-          IconButton(
-            onPressed: _clearFilters,
-            icon: const Icon(
-              Icons.clear,
-              size: 16,
-              color: AppTheme.primaryColor,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+          GestureDetector(
+            onTap: _clearFilters,
+            child: const Icon(Icons.close,
+                color: AppTheme.primaryColor, size: 16),
           ),
         ],
       ),
     );
   }
 
-  String _getActiveFiltersText() {
-    final filters = <String>[];
-    if (_selectedCategoryId != null) filters.add('Danh mục');
+  String _filterText() {
+    final list = <String>[];
+    if (_selectedCategoryId != null) list.add("Danh mục");
     if (_minPrice != null || _maxPrice != null) {
-      final priceText = '${_minPrice ?? 0} - ${_maxPrice ?? '∞'}';
-      filters.add('Giá: $priceText');
+      list.add("Giá: ${_minPrice ?? 0} - ${_maxPrice ?? "∞"}");
     }
-    return filters.join(', ');
+    return list.join(", ");
   }
 
   void _clearFilters() {
@@ -399,47 +375,44 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
+  // ---------------- FILTER DIALOG ----------------
   void _showFilterDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Bộ lọc tìm kiếm'),
+        title: const Text("Bộ lọc tìm kiếm"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Category filter (simplified - you can expand this)
-            const Text('Danh mục: Chưa triển khai'),
+            const Text("Danh mục: chưa triển khai"),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
-            // Price range
             Row(
               children: [
                 Expanded(
                   child: TextFormField(
                     initialValue: _minPrice?.toString(),
+                    keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      labelText: 'Giá từ',
+                      labelText: "Giá từ",
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      _minPrice = value.isEmpty ? null : double.tryParse(value);
-                    },
+                    onChanged: (v) =>
+                        _minPrice = v.isEmpty ? null : double.tryParse(v),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: TextFormField(
                     initialValue: _maxPrice?.toString(),
+                    keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      labelText: 'Giá đến',
+                      labelText: "Giá đến",
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      _maxPrice = value.isEmpty ? null : double.tryParse(value);
-                    },
+                    onChanged: (v) =>
+                        _maxPrice = v.isEmpty ? null : double.tryParse(v),
                   ),
                 ),
               ],
@@ -449,7 +422,7 @@ class _SearchScreenState extends State<SearchScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
+            child: const Text("Hủy"),
           ),
           ElevatedButton(
             onPressed: () {
@@ -458,7 +431,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 _performSearch(_searchController.text);
               }
             },
-            child: const Text('Áp dụng'),
+            child: const Text("Áp dụng"),
           ),
         ],
       ),

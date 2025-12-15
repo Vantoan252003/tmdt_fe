@@ -44,7 +44,9 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Lỗi khi tải tin nhắn: $e'),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: const Color(0xFFEE4D2D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         );
       }
@@ -54,34 +56,98 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text(
-          'Tin nhắn',
+          'Chat',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppTheme.primaryColor,
+            color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFEE4D2D),
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppTheme.primaryColor),
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () {
+              // Search conversations
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onPressed: () {
+              // More options
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryColor),
+              child: CircularProgressIndicator(color: Color(0xFFEE4D2D)),
             )
           : _conversations.isEmpty
               ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _loadConversations,
-                  color: AppTheme.primaryColor,
-                  child: ListView.builder(
-                    itemCount: _conversations.length,
-                    itemBuilder: (context, index) {
-                      return _buildConversationItem(_conversations[index]);
-                    },
-                  ),
+              : Column(
+                  children: [
+                    // Quick actions bar
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          _buildQuickAction(Icons.support_agent, 'Hỗ trợ', () {}),
+                          const SizedBox(width: 24),
+                          _buildQuickAction(Icons.notifications_active, 'Thông báo', () {}),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Conversations list
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _loadConversations,
+                        color: const Color(0xFFEE4D2D),
+                        child: Container(
+                          color: Colors.white,
+                          child: ListView.separated(
+                            itemCount: _conversations.length,
+                            separatorBuilder: (context, index) => Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: Colors.grey[100],
+                              indent: 72,
+                            ),
+                            itemBuilder: (context, index) {
+                              return _buildConversationItem(_conversations[index]);
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+    );
+  }
+
+  Widget _buildQuickAction(IconData icon, String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: const Color(0xFFEE4D2D), size: 20),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -90,18 +156,26 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.chat_bubble_outline,
-            size: 80,
-            color: Colors.grey[300],
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEE4D2D).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.chat_bubble_outline,
+              size: 60,
+              color: Color(0xFFEE4D2D),
+            ),
           ),
-          const SizedBox(height: 16),
-          Text(
+          const SizedBox(height: 24),
+          const Text(
             'Chưa có tin nhắn nào',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
           const SizedBox(height: 8),
@@ -109,7 +183,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
             'Bắt đầu trò chuyện với người bán',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: Colors.grey[600],
             ),
           ),
         ],
@@ -133,104 +207,133 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         ).then((_) => _loadConversations());
       },
       child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            bottom: BorderSide(color: Colors.grey[200]!),
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        color: conversation.unreadCount > 0 
+            ? const Color(0xFFFFF3E0) 
+            : Colors.white,
         child: Row(
           children: [
-            // Avatar
+            // Avatar with online indicator
             Stack(
               children: [
                 CircleAvatar(
-                  radius: 28,
-                  backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                  backgroundImage: conversation.otherUserAvatar != null && conversation.otherUserAvatar!.isNotEmpty
+                  radius: 26,
+                  backgroundColor: const Color(0xFFEE4D2D).withOpacity(0.1),
+                  backgroundImage: conversation.otherUserAvatar != null && 
+                      conversation.otherUserAvatar!.isNotEmpty
                       ? CachedNetworkImageProvider(conversation.otherUserAvatar!)
                       : null,
-                  child: conversation.otherUserAvatar == null || conversation.otherUserAvatar!.isEmpty
+                  child: conversation.otherUserAvatar == null || 
+                      conversation.otherUserAvatar!.isEmpty
                       ? Text(
-                          conversation.otherUserName.isNotEmpty ? conversation.otherUserName[0].toUpperCase() : 'U',
+                          conversation.otherUserName.isNotEmpty 
+                              ? conversation.otherUserName[0].toUpperCase() 
+                              : 'U',
                           style: const TextStyle(
-                            color: AppTheme.primaryColor,
+                            color: Color(0xFFEE4D2D),
                             fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                            fontSize: 18,
                           ),
                         )
                       : null,
                 ),
-                if (conversation.unreadCount > 0)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: AppTheme.errorColor,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 20,
-                        minHeight: 20,
-                      ),
-                      child: Text(
-                        conversation.unreadCount > 99 ? '99+' : '${conversation.unreadCount}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                // Online indicator (optional - can be controlled by user status)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
                     ),
                   ),
+                ),
               ],
             ),
             const SizedBox(width: 12),
+            // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Text(
                           conversation.otherUserName,
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: conversation.unreadCount > 0 ? FontWeight.bold : FontWeight.w500,
-                            color: AppTheme.textPrimary,
+                            fontSize: 15,
+                            fontWeight: conversation.unreadCount > 0 
+                                ? FontWeight.bold 
+                                : FontWeight.w500,
+                            color: Colors.black87,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 8),
                       if (conversation.lastMessageTime != null)
                         Text(
                           _formatTime(conversation.lastMessageTime!),
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: conversation.unreadCount > 0 
+                                ? const Color(0xFFEE4D2D) 
+                                : Colors.grey[600],
+                            fontWeight: conversation.unreadCount > 0 
+                                ? FontWeight.w500 
+                                : FontWeight.normal,
                           ),
                         ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  if (conversation.lastMessage != null)
-                    Text(
-                      conversation.lastMessage!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: conversation.unreadCount > 0 ? AppTheme.textPrimary : AppTheme.textSecondary,
-                        fontWeight: conversation.unreadCount > 0 ? FontWeight.w600 : FontWeight.normal,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          conversation.lastMessage ?? '',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: conversation.unreadCount > 0 
+                                ? Colors.black87 
+                                : Colors.grey[600],
+                            fontWeight: conversation.unreadCount > 0 
+                                ? FontWeight.w500 
+                                : FontWeight.normal,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                      if (conversation.unreadCount > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          constraints: const BoxConstraints(minWidth: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEE4D2D),
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                          child: Text(
+                            conversation.unreadCount > 99 
+                                ? '99+' 
+                                : '${conversation.unreadCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -247,13 +350,17 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
       final diff = now.difference(time);
 
       if (diff.inDays == 0) {
-        return '${time.hour}:${time.minute.toString().padLeft(2, '0')}';
+        // Today - show time
+        return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
       } else if (diff.inDays == 1) {
         return 'Hôm qua';
       } else if (diff.inDays < 7) {
-        return '${diff.inDays} ngày trước';
+        // Within a week - show day of week
+        const weekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        return weekdays[time.weekday % 7];
       } else {
-        return '${time.day}/${time.month}/${time.year}';
+        // Older - show date
+        return '${time.day}/${time.month}';
       }
     } catch (e) {
       return '';

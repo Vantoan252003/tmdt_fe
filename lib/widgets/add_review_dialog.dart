@@ -126,7 +126,7 @@ class _AddReviewDialogState extends State<AddReviewDialog> {
         );
         
         widget.onReviewSubmitted();
-        Navigator.pop(context);
+        if (Navigator.canPop(context)) Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {

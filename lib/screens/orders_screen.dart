@@ -67,12 +67,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) =>const  AlertDialog(
+        builder: (context) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           content: Row(
-            children: [
-               CircularProgressIndicator(color: AppTheme.primaryColor),
-               SizedBox(width: 16),
-               Text('Đang xử lý...'),
+            children: const [
+              CircularProgressIndicator(color: Color(0xFFEE4D2D)),
+              SizedBox(width: 16),
+              Text('Đang xử lý...',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -84,10 +87,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
       if (!mounted) return;
 
       // Close loading dialog
-      Navigator.pop(context);
+      if (Navigator.canPop(context)) Navigator.pop(context);
 
       // Close modal
-      Navigator.pop(context);
+      if (Navigator.canPop(context)) Navigator.pop(context);
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +106,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       if (!mounted) return;
 
       // Close loading dialog
-      Navigator.pop(context);
+      if (Navigator.canPop(context)) Navigator.pop(context);
 
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
@@ -124,16 +127,26 @@ class _OrdersScreenState extends State<OrdersScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text(
-            'Đơn hàng của tôi',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.primaryColor,
+          automaticallyImplyLeading: true,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFEE4D2D), Color(0xFFFF6347)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
           ),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: AppTheme.primaryColor),
+          title: const Text(
+            "Đơn hàng của tôi",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          iconTheme: const IconThemeData(color: Colors.white),
         ),
         body: _isLoading
             ? const Center(
@@ -207,32 +220,26 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: filters.map((filter) {
-            final isSelected = _selectedFilter == filter.$1;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(filter.$2),
+          children: filters.map((f) {
+            final isSelected = _selectedFilter == f.$1;
+            return Container(
+              margin: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(
+                  f.$2,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 selected: isSelected,
-                onSelected: (selected) {
-                  setState(() {
-                    _selectedFilter = filter.$1;
-                  });
-                },
-                backgroundColor: Colors.grey[200],
-                selectedColor: AppTheme.primaryColor.withOpacity(0.2),
-                labelStyle: TextStyle(
-                  color: isSelected ? AppTheme.primaryColor : Colors.grey[700],
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-                side: BorderSide(
-                  color: isSelected ? AppTheme.primaryColor : Colors.transparent,
-                  width: 2,
-                ),
+                selectedColor: const Color(0xFFEE4D2D),
+                backgroundColor: Colors.grey.shade200,
+                onSelected: (_) => setState(() => _selectedFilter = f.$1),
               ),
             );
           }).toList(),
@@ -242,14 +249,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Widget _buildOrderCard(OrderResponse order) {
-    final formattedDate = _formatDate(order.createdAt);
     final statusColor = order.getStatusColor();
+    final formattedDate = _formatDate(order.createdAt);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: InkWell(
         onTap: () => _showOrderDetails(order),
@@ -258,7 +266,48 @@ class _OrdersScreenState extends State<OrdersScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Order code and status
+              // Mã đơn + trạng thái
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    order.orderCode,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      order.getStatusDisplay(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 4),
+              Text(
+                formattedDate,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+
+              const SizedBox(height: 12),
+              Divider(color: Colors.grey.shade300),
+
+              const SizedBox(height: 12),
+              // Địa chỉ + Tổng tiền
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -266,139 +315,38 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          order.orderCode,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
+                        Text("Địa chỉ giao",
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey.shade600)),
                         const SizedBox(height: 4),
                         Text(
-                          formattedDate,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
+                          order.shippingAddress,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 14, color: Colors.black87),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      order.getStatusDisplay(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
-
-              // Order details
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Địa chỉ giao',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        width: 200,
-                        child: Text(
-                          order.shippingAddress,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textPrimary,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        'Tổng tiền',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
+                      Text("Tổng tiền",
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade600)),
                       const SizedBox(height: 4),
                       Text(
-                        '${order.finalAmount.toStringAsFixed(0)}₫',
+                        "${order.finalAmount.toStringAsFixed(0)}₫",
                         style: const TextStyle(
-                          fontSize: 16,
+                          color: Color(0xFFEE4D2D),
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
+                          fontSize: 16,
                         ),
                       ),
                     ],
                   ),
                 ],
-              ),
-              const SizedBox(height: 12),
-
-              // Payment status
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Thanh toán: ${order.paymentMethod}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: order.paymentStatus == 'PAID'
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        order.getPaymentStatusDisplay(),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: order.paymentStatus == 'PAID'
-                              ? Colors.green
-                              : Colors.orange,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
@@ -525,9 +473,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _buildSummaryRow('Tạm tính', '${order.totalAmount.toStringAsFixed(0)}₫'),
+                    _buildSummaryRow(
+                        'Tạm tính', '${order.totalAmount.toStringAsFixed(0)}₫'),
                     if (order.shippingFee > 0)
-                      _buildSummaryRow('Phí vận chuyển', '${order.shippingFee.toStringAsFixed(0)}₫'),
+                      _buildSummaryRow('Phí vận chuyển',
+                          '${order.shippingFee.toStringAsFixed(0)}₫'),
                     if (order.discountAmount > 0)
                       _buildSummaryRow(
                         'Giảm giá',
@@ -552,7 +502,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     ),
                     const SizedBox(height: 12),
                     _buildInfoRow('Phương thức', order.paymentMethod),
-                    _buildInfoRow('Trạng thái', order.getPaymentStatusDisplay()),
+                    _buildInfoRow(
+                        'Trạng thái', order.getPaymentStatusDisplay()),
                     const SizedBox(height: 24),
 
                     // Note
@@ -610,26 +561,22 @@ class _OrdersScreenState extends State<OrdersScreen> {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () => _confirmDelivery(order.orderId, context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.successColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () => _confirmDelivery(order.orderId, context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEE4D2D),
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                       ),
-                    ),
-                    child: const Text(
-                      'Đã nhận được hàng',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      child: const Text(
+                        "ĐÃ NHẬN ĐƯỢC HÀNG",
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                    ),
-                  ),
-                ),
+                    )),
               ),
           ],
         ),
@@ -637,7 +584,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool isDiscount = false, bool isBold = false}) {
+  Widget _buildSummaryRow(String label, String value,
+      {bool isDiscount = false, bool isBold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -656,7 +604,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
             style: TextStyle(
               fontSize: isBold ? 16 : 14,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              color: isDiscount ? Colors.green : (isBold ? AppTheme.primaryColor : Colors.grey[700]),
+              color: isDiscount
+                  ? Colors.green
+                  : (isBold ? AppTheme.primaryColor : Colors.grey[700]),
             ),
           ),
         ],

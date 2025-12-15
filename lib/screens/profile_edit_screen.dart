@@ -12,6 +12,7 @@ class ProfileEditScreen extends StatefulWidget {
 
 class _ProfileEditScreenState extends State<ProfileEditScreen> {
   final _formKey = GlobalKey<FormState>();
+
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
@@ -47,13 +48,16 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     );
 
     final result = await AuthService.updateUserInfo(updatedUser);
+
     setState(() => _isLoading = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(result['success']
-            ? 'Cập nhật thông tin thành công! 🎉'
-            : result['message'] ?? 'Đã có lỗi xảy ra'),
+        content: Text(
+          result['success']
+              ? 'Cập nhật thông tin thành công! 🎉'
+              : result['message'] ?? 'Đã có lỗi xảy ra',
+        ),
         backgroundColor: result['success'] ? Colors.green : Colors.red,
       ),
     );
@@ -64,113 +68,159 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: const Color(0xFFF5F5F5),
+
+      // ---------------- APP BAR ----------------
       appBar: AppBar(
-        title: const Text('Thông tin cá nhân'),
+        elevation: 0,
         centerTitle: true,
-        backgroundColor: Colors.deepPurple,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+        title: const Text(
+          "Chỉnh sửa thông tin",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFEE4D2D), Color(0xFFFF7043)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    const CircleAvatar(
-                      radius: 45,
-                      backgroundColor: Colors.deepPurple,
-                      child: Icon(Icons.person, size: 60, color: Colors.white),
-                    ),
-                    const SizedBox(height: 20),
+          ),
+        ),
+      ),
 
-                    _buildTextField(
-                      controller: _nameController,
-                      label: 'Họ và tên',
-                      icon: Icons.person,
-                      validatorMsg: 'Vui lòng nhập họ tên',
-                    ),
-
-                    _buildTextField(
-                      controller: _emailController,
-                      label: 'Email đăng nhập',
-                      icon: Icons.email,
-                      enabled: false,
-                    ),
-
-                    _buildTextField(
-                      controller: _phoneController,
-                      label: 'Số điện thoại',
-                      icon: Icons.phone,
-                      keyboardType: TextInputType.phone,
-                      validatorMsg: 'Vui lòng nhập số điện thoại hợp lệ',
-                    ),
-
-                    const SizedBox(height: 25),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        minimumSize: const Size(double.infinity, 55),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: _isLoading ? null : _saveChanges,
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Cập nhật',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
-                  ],
+      // ---------------- BODY ----------------
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Avatar
+            Container(
+              alignment: Alignment.center,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFEE4D2D), Color(0xFFFFA36C)],
+                  ),
+                ),
+                child: const CircleAvatar(
+                  radius: 48,
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.person, size: 55, color: Color(0xFFEE4D2D)),
                 ),
               ),
             ),
-          ),
+
+            const SizedBox(height: 20),
+
+            // Card form
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      _buildInput(
+                        controller: _nameController,
+                        label: "Họ và tên",
+                        icon: Icons.person,
+                        validatorMsg: "Vui lòng nhập họ tên",
+                      ),
+                      _buildInput(
+                        controller: _emailController,
+                        label: "Email đăng nhập",
+                        icon: Icons.email,
+                        enabled: false,
+                      ),
+                      _buildInput(
+                        controller: _phoneController,
+                        label: "Số điện thoại",
+                        icon: Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        validatorMsg: "Vui lòng nhập số điện thoại hợp lệ",
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Button Update
+            Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFEE4D2D), Color(0xFFFF7043)],
+                ),
+              ),
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _saveChanges,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        "Cập nhật",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField({
+  // ---------------- CUSTOM INPUT ----------------
+  Widget _buildInput({
     required TextEditingController controller,
     required String label,
     required IconData icon,
     bool enabled = true,
-    TextInputType keyboardType = TextInputType.text,
     String? validatorMsg,
+    TextInputType keyboardType = TextInputType.text,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
         enabled: enabled,
         keyboardType: keyboardType,
+        style: const TextStyle(fontSize: 15),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.deepPurple),
+          prefixIcon: Icon(icon, color: Color(0xFFEE4D2D)),
           labelText: label,
           filled: true,
-          fillColor: enabled ? Colors.grey.shade50 : Colors.grey.shade200,
-          border: OutlineInputBorder(
+          fillColor: enabled ? Colors.white : Colors.grey.shade200,
+          labelStyle: const TextStyle(color: Colors.black54),
+          focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFEE4D2D), width: 2),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
           ),
         ),
         validator: validatorMsg == null
             ? null
-            : (value) =>
-                value == null || value.trim().isEmpty ? validatorMsg : null,
+            : (value) => value!.trim().isEmpty ? validatorMsg : null,
       ),
     );
   }

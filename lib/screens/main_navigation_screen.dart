@@ -17,7 +17,6 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-
   final List<Widget> _screens = const [
     HomeScreen(),
     CartScreen(),
@@ -28,7 +27,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void initState() {
     super.initState();
-    // Delay cart loading until after the first frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadCartItems();
       _loadUnreadNotifications();
@@ -51,58 +49,59 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       builder: (context, navProvider, child) {
         return Scaffold(
           body: _screens[navProvider.currentIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home,
-                  label: 'Trang chủ',
-                  index: 0,
-                ),
-                _buildNavItem(
-                  icon: Icons.shopping_cart_outlined,
-                  activeIcon: Icons.shopping_cart,
-                  label: 'Giỏ hàng',
-                  index: 1,
-                  showBadge: true,
-                ),
-                  _buildNavItem(
-                  icon: Icons.notifications_outlined,
-                  activeIcon: Icons.notifications,
-                  label: 'Thông báo',
-                  index: 2,
-                  showBadge: true,
-                ),
-                _buildNavItem(
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
-                  label: 'Cá nhân',
-                  index: 3,
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
                 ),
               ],
             ),
+            child: SafeArea(
+              child: SizedBox(
+                height: 60,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavItem(
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home,
+                      label: 'Trang chủ',
+                      index: 0,
+                    ),
+                    _buildNavItem(
+                      icon: Icons.shopping_cart_outlined,
+                      activeIcon: Icons.shopping_cart,
+                      label: 'Giỏ hàng',
+                      index: 1,
+                      showBadge: true,
+                    ),
+                    _buildNavItem(
+                      icon: Icons.notifications_outlined,
+                      activeIcon: Icons.notifications,
+                      label: 'Thông báo',
+                      index: 2,
+                      showBadge: true,
+                    ),
+                    _buildNavItem(
+                      icon: Icons.person_outline,
+                      activeIcon: Icons.person,
+                      label: 'Tôi',
+                      index: 3,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
-  );
-}
+
   Widget _buildNavItem({
     required IconData icon,
     required IconData activeIcon,
@@ -118,12 +117,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         navProvider.setIndex(index);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: isActive ? AppTheme.primaryGradient : null,
-          borderRadius: BorderRadius.circular(12),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        color: Colors.transparent,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
@@ -131,13 +128,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               children: [
                 Icon(
                   isActive ? activeIcon : icon,
-                  color: isActive ? Colors.white : AppTheme.textLight,
-                  size: 24,
+                  color: isActive ? const Color(0xFFEE4D2D) : Colors.grey[600],
+                  size: 26,
                 ),
                 if (showBadge)
                   Positioned(
-                    right: -8,
-                    top: -8,
+                    right: -6,
+                    top: -4,
                     child: index == 1
                         ? Consumer<CartProvider>(
                             builder: (context, cartProvider, child) {
@@ -145,20 +142,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                                 return const SizedBox();
                               }
                               return Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.errorColor,
-                                  shape: BoxShape.circle,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEE4D2D),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 constraints: const BoxConstraints(
-                                  minWidth: 18,
-                                  minHeight: 18,
+                                  minWidth: 16,
+                                  minHeight: 16,
                                 ),
                                 child: Text(
-                                  '${cartProvider.itemCount}',
+                                  cartProvider.itemCount > 99 
+                                      ? '99+' 
+                                      : '${cartProvider.itemCount}',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 10,
+                                    fontSize: 9,
                                     fontWeight: FontWeight.bold,
                                   ),
                                   textAlign: TextAlign.center,
@@ -172,20 +174,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                                 return const SizedBox();
                               }
                               return Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.errorColor,
-                                  shape: BoxShape.circle,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEE4D2D),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 constraints: const BoxConstraints(
-                                  minWidth: 18,
-                                  minHeight: 18,
+                                  minWidth: 16,
+                                  minHeight: 16,
                                 ),
                                 child: Text(
-                                  '${notificationProvider.unreadCount}',
+                                  notificationProvider.unreadCount > 99 
+                                      ? '99+' 
+                                      : '${notificationProvider.unreadCount}',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 10,
+                                    fontSize: 9,
                                     fontWeight: FontWeight.bold,
                                   ),
                                   textAlign: TextAlign.center,
@@ -196,13 +203,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   ),
               ],
             ),
-          
+            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isActive ? Colors.white : AppTheme.textLight,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+                color: isActive ? const Color(0xFFEE4D2D) : Colors.grey[600],
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ],
@@ -210,5 +217,4 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
     );
   }
-  
 }
