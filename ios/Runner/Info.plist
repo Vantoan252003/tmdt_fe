@@ -69,5 +69,11 @@
 		<string>fbauth2</string>
 		<string>fbshareextension</string>
 	</array>
+	
+	<!-- Camera and Photo Library Permissions -->
+	<key>NSCameraUsageDescription</key>
+	<string>Ứng dụng cần truy cập camera để chụp ảnh đại diện</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ứng dụng cần truy cập thư viện ảnh để chọn ảnh đại diện</string>
 </dict>
 </plist>

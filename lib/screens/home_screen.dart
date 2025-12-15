@@ -13,6 +13,7 @@ import '../widgets/search_bar_widget.dart';
 import '../providers/cart_provider.dart';
 import 'search_screen.dart';
 import 'categories_screen.dart';
+import 'conversation_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -197,16 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 24),
-                ),
+               
                 const SizedBox(width: 8),
                 Container(
                   width: 42,
@@ -215,7 +207,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 22),
+                  child: IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ConversationListScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 22),
+                  ),
                 ),
               ],
             ),
@@ -291,8 +291,6 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 8),
         _buildCategories(),
         const SizedBox(height: 8),
-        _buildFlashSaleSection(),
-        const SizedBox(height: 8),
         _buildNewProductsSection(),
         const SizedBox(height: 16),
       ],
@@ -360,147 +358,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ======================= FLASH SALE =======================
 
-  Widget _buildFlashSaleSection() {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFFF6B35), Color(0xFFEE4D2D)],
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.flash_on, color: Colors.white, size: 28),
-                const SizedBox(width: 8),
-                const Text(
-                  "FLASH SALE",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1,
-                  ),
-                ),
-                const Spacer(),
-                _countdown(),
-              ],
-            ),
-          ),
-          Container(
-            height: 240,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: featuredProducts.length,
-              itemBuilder: (_, i) {
-                final p = featuredProducts[i];
-                return Container(
-                  width: 140,
-                  margin: const EdgeInsets.only(right: 8),
-                  child: _buildFlashSaleCard(p),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  
 
-  Widget _buildFlashSaleCard(Product product) {
-    final imageUrl = _getProductImage(product);
-    
-    return GestureDetector(
-      onTap: () => _addToCart(product),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                  child: Image.network(
-                    imageUrl,
-                    height: 140,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 140,
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.image, color: Colors.grey),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFD700),
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(4),
-                      ),
-                    ),
-                    child: const Text(
-                      "-30%",
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFEE4D2D),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "₫${product.price.toStringAsFixed(0)}",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFEE4D2D),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEE4D2D),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: const Text(
-                      "ĐANG BÁN CHẠY",
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  
 
   Widget _countdown() {
     String f(int n) => n.toString().padLeft(2, '0');

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'dart:io';
 import '../models/user.dart';
 import 'api_endpoints.dart';
 import 'fcm_service.dart';
@@ -150,7 +151,11 @@ class AuthService {
     return prefs.getString(_tokenKey);
   }
 
-  // Get stored user data
+  // Get SharedPreferences instance (for other services)
+  static Future<SharedPreferences> getPrefs() async {
+    return await SharedPreferences.getInstance();
+  }
+
   static Future<User?> getUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final userDataJson = prefs.getString(_userDataKey);
@@ -165,10 +170,78 @@ class AuthService {
     return null;
   }
 
+  static Future<User?> fetchUserProfile() async {
+    try {
+      final token = await getToken();
+      if (token == null) return null;
+
+      final response = await http.get(
+        Uri.parse(ApiEndpoints.profile),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          final user = User.fromJson(data['data']);
+          
+          // Update cache
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_userDataKey, jsonEncode(user.toJson()));
+          
+          return user;
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Get user ID from stored user data
   static Future<String?> getUserId() async {
     final user = await getUserData();
     return user?.id;
+  }
+
+  // Upload avatar
+  static Future<Map<String, dynamic>> uploadAvatar(File imageFile) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Người dùng chưa đăng nhập'};
+      }
+
+      // Create multipart request
+      var request = http.MultipartRequest('POST', Uri.parse(ApiEndpoints.uploadAvatar));
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // Add image file
+      var multipartFile = await http.MultipartFile.fromPath(
+        'file',
+        imageFile.path,
+      );
+      request.files.add(multipartFile);
+
+      // Send request
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+      var data = jsonDecode(responseData);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        // Fetch fresh user data from API to get updated avatar and latest stats
+        await fetchUserProfile();
+
+        return {'success': true, 'message': 'Upload avatar thành công', 'avatarUrl': data['data']};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Upload avatar thất bại'
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi kết nối: $e'};
+    }
   }
 
   static Future<Map<String, dynamic>> updateUserInfo(User user) async {
@@ -187,7 +260,7 @@ class AuthService {
         },
         body: jsonEncode({
           "fullName": user.fullName,
-          "phoneNumber": user.phone,
+          "phoneNumber": user.phoneNumber,
           "email": user.email,
         }),
       );

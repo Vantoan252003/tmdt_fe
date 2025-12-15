@@ -3,9 +3,12 @@ import 'package:student_ecommerce/screens/address_screen.dart';
 import 'package:student_ecommerce/screens/profile_edit_screen.dart';
 import 'package:student_ecommerce/screens/orders_screen.dart';
 import 'package:student_ecommerce/screens/notification_screen.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../utils/app_theme.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
+import '../services/avatar_service.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -27,9 +30,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserData() async {
     try {
-      final user = await AuthService.getUserData();
+      final user = await AuthService.fetchUserProfile();
+      if (user != null) {
+        setState(() {
+          _user = user;
+          _isLoading = false;
+        });
+        return;
+      }
+      final cachedUser = await AuthService.getUserData();
       setState(() {
-        _user = user;
+        _user = cachedUser;
         _isLoading = false;
       });
     } catch (e) {
@@ -40,6 +51,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final result = await AvatarService.pickAndUploadAvatar(source);
+
+    if (result['success']) {
+      // Reload user data to show new avatar
+      await _loadUserData();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showImageSourceDialog() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Chọn từ thư viện'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Chụp ảnh'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -92,13 +159,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _MenuItem(
                           icon: Icons.person_outline,
                           title: "Thông tin cá nhân",
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => ProfileEditScreen(user: _user!),
                               ),
                             );
+                            if (result == true) {
+                              _loadUserData(); // Reload user data after update
+                            }
                           },
                         ),
                         _MenuItem(
@@ -236,17 +306,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 )
               ],
             ),
-            child: CircleAvatar(
-              radius: 45,
-              backgroundColor: Colors.white,
-              child: Text(
-                user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : "U",
-                style: const TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFEE4D2D),
+            child: Stack(
+              children: [
+                // Avatar image
+                _user!.avatarUrl != null && _user!.avatarUrl!.isNotEmpty
+                    ? ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: _user!.avatarUrl!,
+                          width: 90,
+                          height: 90,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            width: 90,
+                            height: 90,
+                            decoration: const BoxDecoration(
+                              color: Colors.grey,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => CircleAvatar(
+                            radius: 45,
+                            backgroundColor: Colors.white,
+                            child: Text(
+                              _user!.fullName.isNotEmpty ? _user!.fullName[0].toUpperCase() : "U",
+                              style: const TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFEE4D2D),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : CircleAvatar(
+                        radius: 45,
+                        backgroundColor: Colors.white,
+                        child: Text(
+                          _user!.fullName.isNotEmpty ? _user!.fullName[0].toUpperCase() : "U",
+                          style: const TextStyle(
+                            fontSize: 42,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFEE4D2D),
+                          ),
+                        ),
+                      ),
+
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: _showImageSourceDialog,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEE4D2D),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
           const SizedBox(height: 14),
@@ -273,11 +401,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStatItem("Đơn hàng", "12"),
+              _buildStatItem("Đơn hàng", user.stats?.totalOrders.toString() ?? "0"),
               _dividerLine(),
-              _buildStatItem("Yêu thích", "34"),
+              _buildStatItem("Yêu thích", user.stats?.totalFavorites.toString() ?? "0"),
               _dividerLine(),
-              _buildStatItem("Đánh giá", "8"),
+              _buildStatItem("Đánh giá", user.stats?.totalReviews.toString() ?? "0"),
             ],
           ),
         ],

@@ -24,7 +24,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.user.fullName);
     _emailController = TextEditingController(text: widget.user.email);
-    _phoneController = TextEditingController(text: widget.user.phone ?? '');
+    _phoneController = TextEditingController(text: widget.user.phoneNumber ?? '');
   }
 
   @override
@@ -44,7 +44,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       role: widget.user.role,
       fullName: _nameController.text.trim(),
       email: widget.user.email,
-      phone: _phoneController.text.trim(),
+      phoneNumber: _phoneController.text.trim(),
+      avatarUrl: widget.user.avatarUrl,
+      address: widget.user.address,
+      stats: widget.user.stats,
     );
 
     final result = await AuthService.updateUserInfo(updatedUser);
