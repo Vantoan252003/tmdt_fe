@@ -65,6 +65,9 @@ class AddressProvider extends ChangeNotifier {
               district: address.district,
               city: address.city,
               isDefault: false,
+              latitude: address.latitude,
+              longitude: address.longitude,
+              formattedAddress: address.formattedAddress,
               createdAt: address.createdAt,
               updatedAt: address.updatedAt,
             );
@@ -103,6 +106,9 @@ class AddressProvider extends ChangeNotifier {
                 district: _addresses[i].district,
                 city: _addresses[i].city,
                 isDefault: false,
+                latitude: _addresses[i].latitude,
+                longitude: _addresses[i].longitude,
+                formattedAddress: _addresses[i].formattedAddress,
                 createdAt: _addresses[i].createdAt,
                 updatedAt: _addresses[i].updatedAt,
               );
@@ -154,6 +160,9 @@ class AddressProvider extends ChangeNotifier {
           district: _addresses[i].district,
           city: _addresses[i].city,
           isDefault: _addresses[i].addressId == addressId,
+          latitude: _addresses[i].latitude,
+          longitude: _addresses[i].longitude,
+          formattedAddress: _addresses[i].formattedAddress,
           createdAt: _addresses[i].createdAt,
           updatedAt: _addresses[i].updatedAt,
         );

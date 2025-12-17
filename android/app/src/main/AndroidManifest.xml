@@ -6,6 +6,9 @@
     <!-- Permissions for Android 13+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    <!-- Location permissions for Google Maps -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     
     <application
         android:label="EduMart"
@@ -15,6 +18,9 @@
         <!-- Facebook Configuration -->
         <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
         <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token"/>
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyB3o5yLQv7Wt52Rl_ZBa0iiUiOihQ240DY"/>
         
         <activity
             android:name=".MainActivity"

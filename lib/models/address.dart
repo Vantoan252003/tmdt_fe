@@ -8,6 +8,9 @@ class Address {
   final String district;
   final String city;
   final bool isDefault;
+  final double? latitude;
+  final double? longitude;
+  final String? formattedAddress;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -21,6 +24,9 @@ class Address {
     required this.district,
     required this.city,
     required this.isDefault,
+    this.latitude,
+    this.longitude,
+    this.formattedAddress,
     this.createdAt,
     this.updatedAt,
   });
@@ -36,6 +42,9 @@ class Address {
       district: json['district'] ?? '',
       city: json['city'] ?? '',
       isDefault: json['isDefault'] ?? false,
+      latitude: json['latitude']?.toDouble(),
+      longitude: json['longitude']?.toDouble(),
+      formattedAddress: json['formattedAddress'],
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
@@ -52,6 +61,9 @@ class Address {
       'district': district,
       'city': city,
       'isDefault': isDefault,
+      'latitude': latitude,
+      'longitude': longitude,
+      'formattedAddress': formattedAddress,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
@@ -142,6 +154,9 @@ class AddressRequest {
   final String district;
   final String city;
   final bool isDefault;
+  final double? latitude;
+  final double? longitude;
+  final String? formattedAddress;
 
   AddressRequest({
     required this.recipientName,
@@ -151,6 +166,9 @@ class AddressRequest {
     required this.district,
     required this.city,
     this.isDefault = false,
+    this.latitude,
+    this.longitude,
+    this.formattedAddress,
   });
 
   Map<String, dynamic> toJson() {
@@ -162,6 +180,9 @@ class AddressRequest {
       'district': district,
       'city': city,
       'isDefault': isDefault,
+      'latitude': latitude,
+      'longitude': longitude,
+      'formattedAddress': formattedAddress,
     };
   }
 }
