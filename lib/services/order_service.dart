@@ -94,7 +94,7 @@ class OrderService {
       }
 
       final response = await http.get(
-        Uri.parse('${ApiEndpoints.baseUrl}/orders/my-orders'),
+        Uri.parse(ApiEndpoints.myOrdersWithDeliveryStatus),
         headers: {
           'Authorization': 'Bearer $token',
         },

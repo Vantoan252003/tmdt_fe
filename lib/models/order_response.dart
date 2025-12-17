@@ -18,6 +18,8 @@ class OrderResponse {
   final String? note;
   final String createdAt;
   final String updatedAt;
+  final bool canConfirmDelivery;
+  final String? deliveryProofImage;
 
   OrderResponse({
     required this.orderId,
@@ -37,6 +39,8 @@ class OrderResponse {
     this.note,
     required this.createdAt,
     required this.updatedAt,
+    required this.canConfirmDelivery,
+    this.deliveryProofImage,
   });
 
   factory OrderResponse.fromJson(Map<String, dynamic> json) {
@@ -58,6 +62,8 @@ class OrderResponse {
       note: json['note'],
       createdAt: json['createdAt'] ?? '',
       updatedAt: json['updatedAt'] ?? '',
+      canConfirmDelivery: json['canConfirmDelivery'] ?? false,
+      deliveryProofImage: json['deliveryProofImage'],
     );
   }
 
@@ -80,6 +86,8 @@ class OrderResponse {
       'note': note,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      'canConfirmDelivery': canConfirmDelivery,
+      'deliveryProofImage': deliveryProofImage,
     };
   }
 

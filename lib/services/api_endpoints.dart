@@ -1,6 +1,6 @@
 class ApiEndpoints {
   // Base URL
-  static const String baseUrl = 'http://192.168.31.101:8080/api';
+  static const String baseUrl = 'http://192.168.0.102:8080/api';
   
   // Auth endpoints
   static const String login = '$baseUrl/auth/login';
@@ -32,6 +32,8 @@ class ApiEndpoints {
   static const String orders = '$baseUrl/orders';
   static String orderDetail(String id) => '$baseUrl/orders/$id';
   static const String createOrder = '$baseUrl/orders/create';
+  static const String myOrders = '$baseUrl/orders/my-orders';
+  static const String myOrdersWithDeliveryStatus = '$baseUrl/orders/my-orders-with-delivery-status';
   static String cancelOrder(String id) => '$baseUrl/orders/$id/cancel';
   
   // User endpoints

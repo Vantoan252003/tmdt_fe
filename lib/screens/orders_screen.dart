@@ -506,6 +506,30 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         'Trạng thái', order.getPaymentStatusDisplay()),
                     const SizedBox(height: 24),
 
+                    // Delivery proof image
+                    if (order.deliveryProofImage != null && order.deliveryProofImage!.isNotEmpty) ...[
+                      const Text(
+                        'Hình ảnh giao hàng',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(
+                            image: NetworkImage(order.deliveryProofImage!),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+
                     // Note
                     if (order.note != null && order.note!.isNotEmpty) ...[
                       const Text(
@@ -556,8 +580,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
               ),
             ),
 
-            // Action button for shipping status
-            if (order.status == 'SHIPPING')
+            // Action button for delivery confirmation
+            if (order.canConfirmDelivery)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: SizedBox(
