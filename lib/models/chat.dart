@@ -6,6 +6,7 @@ class ChatMessage {
   final String? senderAvatar;
   final String receiverId;
   final String content;
+  final String? imageUrl;
   final String messageType; // TEXT, IMAGE, etc.
   final bool isRead;
   final String createdAt;
@@ -18,6 +19,7 @@ class ChatMessage {
     this.senderAvatar,
     required this.receiverId,
     required this.content,
+    this.imageUrl,
     required this.messageType,
     required this.isRead,
     required this.createdAt,
@@ -32,6 +34,7 @@ class ChatMessage {
       senderAvatar: json['senderAvatar'],
       receiverId: json['receiverId'] ?? '',
       content: json['content'] ?? '',
+      imageUrl: json['imageUrl'],
       messageType: json['messageType'] ?? 'TEXT',
       isRead: json['isRead'] ?? false,
       createdAt: json['createdAt'] ?? '',
@@ -47,6 +50,7 @@ class ChatMessage {
       if (senderAvatar != null) 'senderAvatar': senderAvatar,
       'receiverId': receiverId,
       'content': content,
+      if (imageUrl != null) 'imageUrl': imageUrl,
       'messageType': messageType,
       'isRead': isRead,
       'createdAt': createdAt,

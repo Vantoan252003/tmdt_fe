@@ -1,6 +1,6 @@
 class ApiEndpoints {
   // Base URL
-  static const String baseUrl = 'http://192.168.0.102:8080/api';
+  static const String baseUrl = 'http://192.168.31.101:8080/api';
   
   // Auth endpoints
   static const String login = '$baseUrl/auth/login';
@@ -67,16 +67,21 @@ class ApiEndpoints {
   // Voucher endpoints
   static String availableVouchers(String shopId) => '$baseUrl/vouchers/available?shopId=$shopId';
 
+  // Banner endpoints
+  static const String banners = '$baseUrl/banners';
+
   // Shop Review endpoints
   static String canReviewShop(String shopId) => '$baseUrl/shop-reviews/shop/$shopId/can-review';
   static String createShopReview(String shopId) => '$baseUrl/shop-reviews/shop/$shopId';
   static String shopReviews(String shopId) => '$baseUrl/shop-reviews/shop/$shopId';
 
   // Chat endpoints
-  static const String chatWebSocket = 'http://192.168.0.102:8080/ws';
+  // Note: Use http:// for STOMP client - it will handle ws:// conversion with SockJS
+  static const String chatWebSocket = 'http://192.168.31.101:8080/ws';
   static const String conversations = '$baseUrl/chat/conversations';
   static String conversationMessages(String conversationId) => '$baseUrl/chat/conversations/$conversationId/messages';
   static const String sendMessage = '$baseUrl/chat/send';
+  static const String sendImage = '$baseUrl/chat/send-image';
   static String markAsRead(String conversationId) => '$baseUrl/chat/conversations/$conversationId/mark-read';
   static const String startConversation = '$baseUrl/chat/conversations/start';
 

@@ -1,5 +1,8 @@
-import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart' as path;
+import 'dart:convert';
 import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_config.dart';
 import 'package:stomp_dart_client/stomp_frame.dart';
@@ -18,6 +21,8 @@ class ChatService {
     _onMessageReceived = onMessageReceived;
 
     final token = await AuthService.getToken();
+
+    _stompClient?.deactivate();
     
     _stompClient = StompClient(
       config: StompConfig(
@@ -38,57 +43,210 @@ class ChatService {
         onWebSocketDone: () {
           print('✅ WebSocket connection closed');
         },
-        // SockJS fallback - quan trọng!
+        // Enable SockJS for Spring Boot compatibility
         useSockJS: true,
         
-        // Reconnect settings
-        reconnectDelay: const Duration(seconds: 5),
-        heartbeatIncoming: const Duration(seconds: 10),
-        heartbeatOutgoing: const Duration(seconds: 10),
+        // Connection settings
+        connectionTimeout: const Duration(seconds: 10),
+        reconnectDelay: const Duration(seconds: 3),
+     
         
-        stompConnectHeaders: token != null ? {'Authorization': 'Bearer $token'} : {},
+        // Heartbeat to keep connection alive
+        heartbeatIncoming: const Duration(seconds: 20),
+        heartbeatOutgoing: const Duration(seconds: 20),
+        
+        // Add authorization headers
+        stompConnectHeaders: token != null 
+          ? {
+              'Authorization': 'Bearer $token',
+              'accept-version': '1.1,1.0',
+              'heart-beat': '0,0',
+            }
+          : {
+              'accept-version': '1.1,1.0',
+              'heart-beat': '0,0',
+            },
         webSocketConnectHeaders: token != null ? {'Authorization': 'Bearer $token'} : {},
       ),
     );
 
+    print('🚀 Activating STOMP client with WebSocket URL: ${ApiEndpoints.chatWebSocket}');
     _stompClient?.activate();
+    
+    // Give it a moment to connect
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   void onConnectCallback(StompFrame frame) {
-    print('✅ Connected to chat WebSocket');
+    print('✅ Connected to chat WebSocket at ${DateTime.now()}');
+    print('🔗 Connection details - Frame command: ${frame.command}');
+    print('👤 Connected with userId: $_currentUserId');
     
-    // Subscribe to user's message queue
-    _stompClient?.subscribe(
-      destination: '/user/queue/messages',
-      callback: (StompFrame frame) {
-        if (frame.body != null) {
-          try {
-            final message = ChatMessage.fromJson(jsonDecode(frame.body!));
-            print('📩 New message received: ${message.content}');
-            _onMessageReceived?.call(message);
-          } catch (e) {
-            print('❌ Error parsing message: $e');
-          }
-        }
-      },
-    );
+    // Add a small delay to ensure connection is stable
+    Future.delayed(const Duration(milliseconds: 100), () {
+      // Try multiple subscription patterns to ensure compatibility
+      // Pattern 1: /user/{userId}/queue/messages (Spring default for convertAndSendToUser)
+      final destination1 = '/user/$_currentUserId/queue/messages';
+      print('📡 [1] Subscribing to: $destination1');
+      
+      _stompClient?.subscribe(
+        destination: destination1,
+        callback: (StompFrame frame) {
+          print('🎉🎉🎉 [PATTERN 1] WEBSOCKET CALLBACK TRIGGERED! 🎉🎉🎉');
+          _handleIncomingMessage(frame);
+        },
+      );
+      
+      // Pattern 2: /queue/messages (Spring might resolve /user prefix automatically)
+      final destination2 = '/queue/messages';
+      print('📡 [2] Subscribing to: $destination2');
+      
+      _stompClient?.subscribe(
+        destination: destination2,
+        callback: (StompFrame frame) {
+          print('🎉🎉🎉 [PATTERN 2] WEBSOCKET CALLBACK TRIGGERED! 🎉🎉🎉');
+          _handleIncomingMessage(frame);
+        },
+      );
+      
+      // Pattern 3: /user/queue/messages (original attempt)
+      final destination3 = '/user/queue/messages';
+      print('📡 [3] Subscribing to: $destination3');
+      
+      _stompClient?.subscribe(
+        destination: destination3,
+        callback: (StompFrame frame) {
+          print('🎉🎉🎉 [PATTERN 3] WEBSOCKET CALLBACK TRIGGERED! 🎉🎉🎉');
+          _handleIncomingMessage(frame);
+        },
+      );
+      
+      // Pattern 4: /topic/messages (alternative)
+      final destination4 = '/topic/messages';
+      print('📡 [4] Subscribing to: $destination4');
+      
+      _stompClient?.subscribe(
+        destination: destination4,
+        callback: (StompFrame frame) {
+          print('🎉🎉🎉 [PATTERN 4] WEBSOCKET CALLBACK TRIGGERED! 🎉🎉🎉');
+          _handleIncomingMessage(frame);
+        },
+      );
+      
+      // Pattern 5: /user/{userId}/messages (without queue)
+      final destination5 = '/user/$_currentUserId/messages';
+      print('📡 [5] Subscribing to: $destination5');
+      
+      _stompClient?.subscribe(
+        destination: destination5,
+        callback: (StompFrame frame) {
+          print('🎉🎉🎉 [PATTERN 5] WEBSOCKET CALLBACK TRIGGERED! 🎉🎉🎉');
+          _handleIncomingMessage(frame);
+        },
+      );
+      
+      // Pattern 6: /topic/messages (alternative)
+      final destination6 = '/topic/messages';
+      print('📡 [6] Subscribing to: $destination6');
+      
+      _stompClient?.subscribe(
+        destination: destination6,
+        callback: (StompFrame frame) {
+          print('🎉🎉🎉 [PATTERN 6] WEBSOCKET CALLBACK TRIGGERED! 🎉🎉🎉');
+          _handleIncomingMessage(frame);
+        },
+      );
+      
+      print('✅ Subscribed to all 6 destination patterns');
+    });
+  }
+
+  // Handle incoming WebSocket messages
+  void _handleIncomingMessage(StompFrame frame) {
+    print('🎯🎯🎯 MESSAGE RECEIVED VIA WEBSOCKET! 🎯🎯🎯');
+    print('📦 Frame body: ${frame.body}');
+    print('📍 Frame destination: ${frame.headers?["destination"] ?? "N/A"}');
+    print('📍 Frame subscription: ${frame.headers?["subscription"] ?? "N/A"}');
+    print('📍 Frame message-id: ${frame.headers?["message-id"] ?? "N/A"}');
+    
+    if (frame.body != null && frame.body!.isNotEmpty) {
+      try {
+        print('🔄 Attempting to parse JSON...');
+        final jsonData = jsonDecode(frame.body!);
+        print('✅ JSON parsed successfully: $jsonData');
+        
+        final message = ChatMessage.fromJson(jsonData);
+        print('✅ ChatMessage created:');
+        print('   - messageId: ${message.messageId}');
+        print('   - conversationId: ${message.conversationId}');
+        print('   - senderId: ${message.senderId}');
+        print('   - senderName: ${message.senderName}');
+        print('   - content: ${message.content}');
+        print('   - messageType: ${message.messageType}');
+        print('   - createdAt: ${message.createdAt}');
+        
+        print('📞 Calling onMessageReceived callback...');
+        _onMessageReceived?.call(message);
+        print('✅ Callback called successfully');
+        
+      } catch (e) {
+        print('❌ Error parsing WebSocket message: $e');
+        print('❌ Raw frame body: ${frame.body}');
+        print('❌ Stack trace: ${e.toString()}');
+      }
+    } else {
+      print('⚠️ Frame body is null or empty');
+    }
   }
 
   // Send message via WebSocket
-  void sendMessageViaWebSocket(String receiverId, String content, {String messageType = 'TEXT'}) {
+  Map<String, dynamic> sendMessageViaWebSocket(String receiverId, String content, {String messageType = 'TEXT', String? conversationId}) {
+    print('🔍 Checking WebSocket connection status...');
+    print('   - _stompClient is null: ${_stompClient == null}');
+    print('   - _stompClient connected: ${_stompClient?.connected}');
+    
     if (_stompClient == null || !_stompClient!.connected) {
+      print('❌ WebSocket not connected, cannot send message');
       throw Exception('WebSocket not connected');
     }
 
-    _stompClient?.send(
-      destination: '/app/send',
-      body: jsonEncode({
-        'senderId': _currentUserId,
-        'receiverId': receiverId,
-        'content': content,
-        'messageType': messageType,
-      }),
-    );
+    final messageData = {
+      'senderId': _currentUserId,
+      'receiverId': receiverId,
+      'content': content,
+      'messageType': messageType,
+    };
+    
+    print('📤 [FLUTTER] Sending WebSocket message:');
+    print('   - Destination: /app/send');
+    print('   - Data: $messageData');
+    print('   - Current userId: $_currentUserId');
+    
+    try {
+      _stompClient?.send(
+        destination: '/app/send',
+        body: jsonEncode(messageData),
+      );
+      print('✅ [FLUTTER] WebSocket message sent successfully');
+    } catch (e) {
+      print('❌ [FLUTTER] Error sending WebSocket message: $e');
+      throw e;
+    }
+    
+    // Return optimistic message data for sender's UI
+    return {
+      'messageId': 'temp-${DateTime.now().millisecondsSinceEpoch}', // Temporary ID
+      'conversationId': conversationId ?? '',
+      'senderId': _currentUserId ?? '',
+      'senderName': 'You', // Will be updated when real message arrives
+      'senderAvatar': null,
+      'receiverId': receiverId,
+      'content': content,
+      'imageUrl': null,
+      'messageType': messageType,
+      'isRead': false,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
   }
 
   // Disconnect WebSocket
@@ -222,6 +380,58 @@ class ChatService {
     }
   }
 
+  // REST API: Send image message
+  Future<ChatMessage?> sendImageMessage(String receiverId, File imageFile) async {
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Create multipart request
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse(ApiEndpoints.sendImage),
+      );
+
+      // Add authorization header
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // Add receiverId field
+      request.fields['receiverId'] = receiverId;
+
+      // Add image file
+      final fileName = path.basename(imageFile.path);
+      final mimeType = _getMimeType(fileName);
+      
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          imageFile.path,
+          filename: fileName,
+          contentType: MediaType.parse(mimeType),
+        ),
+      );
+
+      // Send request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonResponse = jsonDecode(response.body);
+        if (jsonResponse['success'] == true) {
+          return ChatMessage.fromJson(jsonResponse['data']);
+        } else {
+          throw Exception(jsonResponse['message'] ?? 'Failed to send image');
+        }
+      } else {
+        throw Exception('Failed to send image: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error sending image: $e');
+    }
+  }
+
   // REST API: Start/get conversation
   Future<Conversation?> startConversation(String otherUserId) async {
     try {
@@ -253,6 +463,24 @@ class ChatService {
       }
     } catch (e) {
       throw Exception('Error starting conversation: $e');
+    }
+  }
+
+  // Helper method to get MIME type from file extension
+  String _getMimeType(String fileName) {
+    final extension = path.extension(fileName).toLowerCase();
+    switch (extension) {
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.png':
+        return 'image/png';
+      case '.gif':
+        return 'image/gif';
+      case '.webp':
+        return 'image/webp';
+      default:
+        return 'image/jpeg'; // Default fallback
     }
   }
 }

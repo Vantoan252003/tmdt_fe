@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:provider/provider.dart';
-
-import '../utils/app_theme.dart';
+import '../widgets/banner_widget.dart';
 import '../models/product.dart';
 import '../models/category.dart';
+import '../models/banner.dart';
 import '../services/product_service.dart';
 import '../services/category_service.dart';
+import '../services/banner_service.dart';
 import '../widgets/product_card.dart';
-import '../widgets/search_bar_widget.dart';
 import '../providers/cart_provider.dart';
 import 'search_screen.dart';
 import 'categories_screen.dart';
@@ -26,19 +25,13 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Product> featuredProducts = [];
   List<Product> newProducts = [];
   List<Category> categories = [];
+  List<BannerModel> banners = [];
 
   bool isLoading = true;
 
   Duration flashSaleDuration = const Duration(hours: 2, minutes: 30, seconds: 45);
-  int _currentBanner = 0;
 
   Timer? _flashSaleTimer;
-
-  final List<String> bannerImages = [
-    "https://images.unsplash.com/photo-1607082350899-7e105aa886ae?auto=format&fit=crop&w=1200",
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200",
-    "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&w=1200",
-  ];
 
   // Category icons and colors (Shopee style)
   final List<CategoryStyle> categoryStyles = [
@@ -83,11 +76,13 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final categoryService = CategoryService();
       final productService = ProductService();
+      final bannerService = BannerService();
 
       final results = await Future.wait([
         categoryService.getCategories(),
         productService.getFeaturedProducts(),
         productService.getNewProducts(),
+        bannerService.getBanners(),
       ]);
 
       final allCategories = results[0] as List<Category>;
@@ -98,6 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
             allCategories.where((c) => c.parentCategoryId == null).toList();
         featuredProducts = results[1] as List<Product>;
         newProducts = results[2] as List<Product>;
+        banners = results[3] as List<BannerModel>;
         isLoading = false;
       });
     } catch (_) {
@@ -111,19 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await cartProvider.addToCart(product.productId, 1);
   }
 
-  // Helper method to safely get image URL
-  String _getProductImage(Product product) {
-    try {
-      if (product.images.isNotEmpty) {
-        return product.images[0];
-      }
-    } catch (e) {
-      return '';
-    }
-    return product.mainImageUrl ?? product.imageUrl ?? '';
-  }
 
-  // ======================= BUILD =======================
 
   @override
   Widget build(BuildContext context) {
@@ -181,8 +165,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Row(
-                        children: const [
+                      child: const Row(
+                        children:  [
                           SizedBox(width: 12),
                           Icon(Icons.search, color: Color(0xFFEE4D2D), size: 22),
                           SizedBox(width: 8),
@@ -228,57 +212,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // ======================= BANNER =======================
 
   Widget _buildBanner() {
-    return Container(
-      color: Colors.transparent,
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        children: [
-          CarouselSlider(
-            items: bannerImages.map((url) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    url,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.image, color: Colors.grey),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-            options: CarouselOptions(
-              height: 160,
-              viewportFraction: 0.92,
-              autoPlay: true,
-              autoPlayInterval: const Duration(seconds: 3),
-              enlargeCenterPage: true,
-              onPageChanged: (i, _) => setState(() => _currentBanner = i),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: bannerImages.asMap().entries.map((entry) {
-              return Container(
-                width: _currentBanner == entry.key ? 20 : 8,
-                height: 6,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(3),
-                  color: _currentBanner == entry.key
-                      ? const Color(0xFFEE4D2D)
-                      : Colors.grey.shade300,
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
+    return BannerWidget(
+      banners: banners,
+      isLoading: isLoading,
     );
   }
 

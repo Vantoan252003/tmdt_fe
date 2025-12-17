@@ -12,6 +12,10 @@ class FCMService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  
+  // Track if notifications should be suppressed (e.g., when in chat room)
+  bool _suppressNotifications = false;
+  String? _activeConversationId;
 
   Future<void> initialize() async {
     // Initialize local notifications
@@ -67,6 +71,12 @@ class FCMService {
       print('Got a message whilst in the foreground!');
       print('Message data: ${message.data}');
 
+      // Check if this is a chat message for the active conversation
+      if (_suppressNotifications && message.data['conversationId'] == _activeConversationId) {
+        print('🔇 Suppressing notification - user is in chat room: $_activeConversationId');
+        return;
+      }
+
       if (message.notification != null) {
         print('Message also contained a notification: ${message.notification}');
         _showLocalNotification(message);
@@ -117,6 +127,20 @@ class FCMService {
     if (token != null) {
       await FCMTokenService.deactivateToken(token);
     }
+  }
+
+  /// Suppress notifications for a specific conversation (when user is in chat room)
+  void suppressNotificationsForConversation(String conversationId) {
+    _suppressNotifications = true;
+    _activeConversationId = conversationId;
+    print('🔇 Notifications suppressed for conversation: $conversationId');
+  }
+
+  /// Resume notifications (when user leaves chat room)
+  void resumeNotifications() {
+    _suppressNotifications = false;
+    _activeConversationId = null;
+    print('🔔 Notifications resumed');
   }
 }
 
