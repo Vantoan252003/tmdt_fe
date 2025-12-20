@@ -4,6 +4,7 @@ import '../models/address.dart';
 import '../models/cart_item_response.dart';
 import '../models/order.dart';
 import '../models/voucher.dart';
+import '../models/shipping_calculation.dart';
 import '../services/address_service.dart';
 import '../services/order_service.dart';
 import '../providers/cart_provider.dart';
@@ -36,6 +37,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _isLoadingAddresses = true;
   bool _isCreatingOrder = false;
   Voucher? _selectedVoucher;
+  ShippingCalculationResponse? _shippingInfo;
+  bool _isCalculatingShipping = false;
 
   @override
   void initState() {
@@ -65,6 +68,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           );
         }
       });
+      
+      // Calculate shipping after loading address
+      if (_selectedAddress != null) {
+        await _calculateShipping();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -80,6 +88,73 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       setState(() {
         _isLoadingAddresses = false;
       });
+    }
+  }
+
+  Future<void> _calculateShipping() async {
+    if (_selectedAddress == null) return;
+    
+    final shopId = widget.cartItems.isNotEmpty && widget.cartItems.first.shopId != null
+        ? widget.cartItems.first.shopId!
+        : '';
+    
+    if (shopId.isEmpty) {
+      print('No shopId available for shipping calculation');
+      return;
+    }
+    
+    // Check if address has latitude and longitude
+    if (_selectedAddress!.latitude == null || _selectedAddress!.longitude == null) {
+      print('Selected address does not have latitude/longitude');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Địa chỉ không có tọa độ. Vui lòng chọn địa chỉ khác.'),
+            backgroundColor: const Color(0xFFEE4D2D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isCalculatingShipping = true;
+    });
+
+    try {
+      final request = ShippingCalculationRequest(
+        shopId: shopId,
+        deliveryLatitude: _selectedAddress!.latitude!,
+        deliveryLongitude: _selectedAddress!.longitude!,
+      );
+
+      final shippingInfo = await _orderService.calculateShipping(request);
+      
+      if (mounted) {
+        setState(() {
+          _shippingInfo = shippingInfo;
+        });
+      }
+    } catch (e) {
+      print('Error calculating shipping: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi tính phí vận chuyển: $e'),
+            backgroundColor: const Color(0xFFEE4D2D),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCalculatingShipping = false;
+        });
+      }
     }
   }
 
@@ -160,8 +235,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return _selectedVoucher?.calculateDiscount(widget.totalAmount) ?? 0.0;
   }
 
+  double get _shippingFee {
+    return _shippingInfo?.shippingFee ?? 0.0;
+  }
+
   double get _finalTotal {
-    return widget.totalAmount - _voucherDiscount;
+    return widget.totalAmount + _shippingFee - _voucherDiscount;
   }
 
   @override
@@ -588,16 +667,62 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Phí vận chuyển:',
-                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              Row(
+                children: [
+                  Text(
+                    'Phí vận chuyển:',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  ),
+                  if (_shippingInfo != null) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      '(${_shippingInfo!.formattedDistance})',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    ),
+                  ],
+                ],
               ),
-              const Text(
-                '₫0',
-                style: TextStyle(fontSize: 14),
-              ),
+              _isCalculatingShipping
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFFEE4D2D),
+                      ),
+                    )
+                  : Text(
+                      _shippingInfo != null ? _shippingInfo!.formattedFee : '₫0',
+                      style: const TextStyle(fontSize: 14),
+                    ),
             ],
           ),
+          if (_shippingInfo != null && _shippingInfo!.estimatedTime.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Thời gian dự kiến:',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+                Text(
+                  _shippingInfo!.estimatedTime,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (_selectedVoucher != null) ...[
             const SizedBox(height: 12),
             Row(
@@ -773,11 +898,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   final address = _addresses[index];
                   final isSelected = _selectedAddress?.addressId == address.addressId;
                   return InkWell(
-                    onTap: () {
+                    onTap: () async {
                       setState(() {
                         _selectedAddress = address;
                       });
                       if (Navigator.canPop(context)) Navigator.pop(context);
+                      
+                      // Recalculate shipping for new address
+                      await _calculateShipping();
                     },
                     child: Container(
                       padding: const EdgeInsets.all(16),

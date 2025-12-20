@@ -5,6 +5,7 @@ import 'api_endpoints.dart';
 import '../models/order.dart';
 import '../models/order_response.dart';
 import '../models/api_response.dart';
+import '../models/shipping_calculation.dart';
 
 class OrderService {
   // Create order
@@ -206,6 +207,48 @@ class OrderService {
       }
     } catch (e) {
       throw Exception('Error confirming delivery: $e');
+    }
+  }
+
+  // Calculate shipping fee
+  Future<ShippingCalculationResponse> calculateShipping(ShippingCalculationRequest request) async {
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
+
+      print('Calculating shipping with data: ${jsonEncode(request.toJson())}'); // Debug log
+
+      final response = await http.post(
+        Uri.parse(ApiEndpoints.calculateShipping),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(request.toJson()),
+      );
+
+      print('Calculate shipping response status: ${response.statusCode}'); // Debug log
+      print('Calculate shipping response body: ${response.body}'); // Debug log
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonResponse = jsonDecode(response.body);
+        final apiResponse = ApiResponse<ShippingCalculationResponse>.fromJson(
+          jsonResponse,
+          (data) => ShippingCalculationResponse.fromJson(data),
+        );
+        if (apiResponse.data != null) {
+          return apiResponse.data!;
+        } else {
+          throw Exception('No shipping data in response');
+        }
+      } else {
+        final errorBody = response.body;
+        throw Exception('Failed to calculate shipping: ${response.statusCode} - $errorBody');
+      }
+    } catch (e) {
+      throw Exception('Error calculating shipping: $e');
     }
   }
 }

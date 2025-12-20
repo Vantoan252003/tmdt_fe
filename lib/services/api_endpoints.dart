@@ -1,6 +1,6 @@
 class ApiEndpoints {
   // Base URL
-  static const String baseUrl = 'http://192.168.31.23:8080/api';
+  static const String baseUrl = 'http://192.168.0.102:8080/api';
   
   // Auth endpoints
   static const String login = '$baseUrl/auth/login';
@@ -35,6 +35,7 @@ class ApiEndpoints {
   static const String myOrders = '$baseUrl/orders/my-orders';
   static const String myOrdersWithDeliveryStatus = '$baseUrl/orders/my-orders-with-delivery-status';
   static String cancelOrder(String id) => '$baseUrl/orders/$id/cancel';
+  static const String calculateShipping = '$baseUrl/orders/calculate-shipping';
   
   // User endpoints
   static const String profile = '$baseUrl/user/profile';
@@ -79,7 +80,7 @@ class ApiEndpoints {
 
   // Chat endpoints
   // Note: Use http:// for STOMP client - it will handle ws:// conversion with SockJS
-  static const String chatWebSocket = 'http://192.168.31.101:8080/ws';
+  static const String chatWebSocket = 'http://192.168.0.102/ws';
   static const String conversations = '$baseUrl/chat/conversations';
   static String conversationMessages(String conversationId) => '$baseUrl/chat/conversations/$conversationId/messages';
   static const String sendMessage = '$baseUrl/chat/send';
